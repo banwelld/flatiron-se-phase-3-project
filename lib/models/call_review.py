@@ -1,4 +1,4 @@
-from agent import Agent
+from models.agent import Agent
 from helpers import validate_date, validate_object, validate_with_limits
 
 class CallReview():
@@ -13,10 +13,10 @@ class CallReview():
         score_adherence: int, 
         id_=None
     ):
-        validate_object(agent)
+        validate_object(agent, Agent)
         validate_date(review_date)
         validate_with_limits(score_quality, int, 0, 20)
-        validate_with_limits(score_adherence,int,  0, 10
+        validate_with_limits(score_adherence, int,  0, 10
                              )
         self._agent = agent
         self._review_date = review_date

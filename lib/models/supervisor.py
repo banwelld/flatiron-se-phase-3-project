@@ -21,7 +21,7 @@ class Supervisor():
         Supervisor.all.append(self)
         
     def __str__(self):
-        return f"{type(self).__name__}: {self.name_last_first}"
+        return f"{self.name_last_first()} ({type(self).__name__}, {self.product_line})"
         
     @property
     def name_first(self):
@@ -38,7 +38,7 @@ class Supervisor():
     
     @name_last.setter
     def name_last(self, name_last):
-        validate_with_limits(name_last, str, 1, 23)
+        validate_with_limits(name_last, str, 1, 30)
         self._name_last = name_last
 
     @property
@@ -47,7 +47,7 @@ class Supervisor():
     
     @property
     def product_line(self):
-        return self._supervisor
+        return self._product_line
     
     @product_line.setter
     def product_line(self, product_line):
@@ -59,3 +59,8 @@ class Supervisor():
     
     def name_last_first(self):
         return f"{self.name_last}, {self.name_first}"
+    
+    @classmethod
+    def print_all(cls):
+        for item in cls.all:
+            print(item)

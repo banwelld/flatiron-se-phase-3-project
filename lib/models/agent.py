@@ -1,4 +1,4 @@
-from supervisor import Supervisor
+from models.supervisor import Supervisor
 from helpers import validate_date, validate_object, validate_with_limits
 
 class Agent():
@@ -23,7 +23,7 @@ class Agent():
         
         
     def __str__(self):
-        return f"{type(self).__name__}: {self.name_last_first}"
+        return f"{self.name_last_first()} ({type(self).__name__}, {self.supervisor.product_line})"
         
     @property
     def name_first(self):
