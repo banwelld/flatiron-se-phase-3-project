@@ -1,10 +1,17 @@
-from helpers import validate_string
+from helpers import validate_date, validate_type
 
 class Agent():
     
     all = []
     
-    def __init__(self, name_first: str, name_last: str, date_hired: str, supervisor, id_=None):
+    def __init__(
+        self, 
+        name_first: str, 
+        name_last: str, 
+        date_hired: str, 
+        supervisor, 
+        id_=None
+    ):
         validate_date(date_hired)
         self.id = id_
         self.name_first = name_first
@@ -13,13 +20,16 @@ class Agent():
         self.supervisor = supervisor
         Agent.all.append(self)
         
+    def __str__(self):
+        return f"{type(self).__name__}: {self.name_last}, {self.name_first}"
+        
     @property
     def name_first(self):
         return self._name_first
     
     @name_first.setter
     def name_first(self, name_first):
-        validate_string(name_first, 1, 25)
+        validate_type(name_first, str, 20)
         self._name_first = name_first
     
     @property
@@ -28,7 +38,7 @@ class Agent():
     
     @name_last.setter
     def name_last(self, name_last):
-        validate_name(name_last)
+        validate_type(name_last, str, 30)
         self._name_last = name_last
 
     @property
@@ -41,5 +51,5 @@ class Agent():
     
     @supervisor.setter
     def supervisor(self, supervisor):
-        validate_object(supervisor, Supervisor)
+        validate_type(supervisor, str)
         self._supervisor = supervisor
