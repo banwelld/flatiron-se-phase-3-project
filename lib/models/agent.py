@@ -1,63 +1,42 @@
-from models.supervisor import Supervisor
-from helpers import validate_date, validate_object, validate_with_limits
+from models.employee import Employee
+from models.department import Department
 
-class Agent():
+class Agent(Employee):
     
     all = []
     
     def __init__(
-        self, 
-        name_first: str, 
-        name_last: str, 
-        date_hired: str, 
-        supervisor: Supervisor, 
-        id_=None
+        self,
+        first_name: str,
+        last_name: str,
+        hire_date: str,
+        department: Department,
+        bilingual: bool = False,
+        employee_id: int = None
     ):
-        validate_date(date_hired)
-        self.id = id_
-        self.name_first = name_first
-        self.name_last = name_last
-        self._date_hired = date_hired
-        self.supervisor = supervisor
+        super().__init__(first_name, last_name, hire_date)
+        self.department = department
+        self.bilingual = bilingual
         Agent.all.append(self)
         
         
     def __str__(self):
-        return f"{self.name_last_first()} ({type(self).__name__}, {self.supervisor.product_line})"
+        return f"{type(self).__name__}"
         
     @property
-    def name_first(self):
-        return self._name_first
+    def employee_id(self):
+        return self._employee_id
     
-    @name_first.setter
-    def name_first(self, name_first):
-        validate_with_limits(name_first, str, 1, 20)
-        self._name_first = name_first
-    
-    @property
-    def name_last(self):
-        return self._name_last
-    
-    @name_last.setter
-    def name_last(self, name_last):
-        validate_with_limits(name_last, str, 1, 30)
-        self._name_last = name_last
-
-    @property
-    def date_hired(self):
-        return self._date_hired
+    @employee_id.setter
+    def employee_id(self, employee_id):
+        validate_id(employee_id, str, 1, 20)
+        self._employee_id = employee_id
     
     @property
-    def supervisor(self):
-        return self._supervisor
+    def supervisor_id(self):
+        return self._supervisor_id
     
-    @supervisor.setter
-    def supervisor(self, supervisor):
-        validate_object(supervisor, Supervisor)
-        self._supervisor = supervisor
-    
-    def name_first_last(self):
-        return f"{self.name_first, self.name_last}"
-    
-    def name_last_first(self):
-        return f"{self.name_last}, {self.name_first}"
+    @supervisor_id.setter
+    def supervisor_id(self, supervisor_id):
+        validate_id(supervisor_id, str, 1, 30)
+        self._supervisor_id = supervisor_id

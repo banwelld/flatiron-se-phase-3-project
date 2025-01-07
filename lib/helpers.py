@@ -7,9 +7,9 @@ def within_limits(number: int, min_limit: int, max_limit: int) -> None:
 
 
 def valid_date_format(date_str: str) -> bool:
-    pattern = r"[0-9]{4}/[0-9]{2}/[0-9]{2}"
-    regex = re.compile(pattern)
-    return regex.fullmatch(date_str) is not None
+    pattern = r"^[0-9]{4}/[0-9]{2}/[0-9]{2}$"
+    match = re.match(pattern, date_str)
+    return match is not None
 
 
 def valid_date_value(date_str: str) -> bool:
@@ -27,53 +27,35 @@ def valid_date_value(date_str: str) -> bool:
 def validate_date(date_str: str) -> None:
     if not valid_date_format(date_str):
         raise ValueError(
-            "Date incorrectly formatted (expected: 'YYYY/MM/DD', got: "
-            f"'{date_str}')"
+            f"Date '{date_str}' format is invalid, expected 'YYYY/MM/DD'"
         )
         
     if not valid_date_value(date_str):
         raise ValueError(
-            "Invalid date value (check month and day combination)"
+            f"Date '{date_str}' value is invalid (check month/day combination)"
         )
 
 
 def validate_object(item, expected_type: type) -> None:
     if not isinstance(item, expected_type):
         raise ValueError(
-            f"Expected type '{expected_type.__name__}', but got "
-            f"'{type(item).__name__}' for value '{item}'"
+            f"Object '{item}' type is invalid, expected "
+            f"'{expected_type.__name__}', but got '{type(item).__name__}'"
         )
 
-        
-def validate_with_limits(
-    item: str | int, 
-    expected_type: type, 
-    min_limit: int, 
-    max_limit: int
-) -> None:
 
-    if not isinstance(min_limit, int) or not isinstance(max_limit, int):
-        raise TypeError("Both 'min_limit' and 'max_limit' must be integers")
-    
-    if min_limit > max_limit:
-        raise ValueError("'min_limit' cannot be greater than 'max_limit'")
-    
-    validate_object(item, expected_type)
-
-    if isinstance(item, str):
-        validated_value = len(item)
-        property_name = "length"
-    elif isinstance(item, int):
-        validated_value = item
-        property_name = "value"
-    else:
-        raise TypeError(
-            f"Unsupported type '{type(item).__name__}'. Expected 'str' or 'int'."
-        )
-    
-    if not within_limits(validated_value, min_limit, max_limit):
+def validate_name(name: str, max_length: int):
+    if not within_limits(len(name), 2, max_length):
         raise ValueError(
-            f"Expected {property_name} between {min_limit} and {max_limit}, "
-            f"but got {validated_value}"
-            + (f" for '{item}'" if property_name == "length" else "")
+            f"Name '{name}' length is invalid, expected between 2 and "
+            f"{max_length} characters, but got {len(name)}"
+        )
+        
+    pattern = r"[^a-zA-Z '.\-]"
+    match = re.match(name, pattern)
+    if match is None:
+        raise ValueError(
+            f"Name '{name}' contains invalid character '{match.group()}', "
+            "only letters, periods (.), hyphens (-), and apostrophes (') "
+            "are allowed"
         )
