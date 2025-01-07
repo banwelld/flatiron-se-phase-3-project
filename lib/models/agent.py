@@ -1,3 +1,5 @@
+from helpers import validate_string
+
 class Agent():
     
     all = []
@@ -17,7 +19,7 @@ class Agent():
     
     @name_first.setter
     def name_first(self, name_first):
-        validate_name(name_first)
+        validate_string(name_first, 1, 25)
         self._name_first = name_first
     
     @property
