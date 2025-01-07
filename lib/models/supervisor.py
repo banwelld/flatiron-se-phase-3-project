@@ -1,4 +1,4 @@
-from helpers import validate_date, validate_type
+from helpers import validate_date, validate_with_limits
 
 class Supervisor():
     
@@ -21,7 +21,7 @@ class Supervisor():
         Supervisor.all.append(self)
         
     def __str__(self):
-        return f"{type(self).__name__}: {self.name_last}, {self.name_first}"
+        return f"{type(self).__name__}: {self.name_last_first}"
         
     @property
     def name_first(self):
@@ -29,7 +29,7 @@ class Supervisor():
     
     @name_first.setter
     def name_first(self, name_first):
-        validate_type(name_first, str, 20)
+        validate_with_limits(name_first, str, 1, 20)
         self._name_first = name_first
     
     @property
@@ -38,7 +38,7 @@ class Supervisor():
     
     @name_last.setter
     def name_last(self, name_last):
-        validate_type(name_last, str, 30)
+        validate_with_limits(name_last, str, 1, 23)
         self._name_last = name_last
 
     @property
@@ -51,5 +51,11 @@ class Supervisor():
     
     @product_line.setter
     def product_line(self, product_line):
-        validate_type(product_line, str, 4)
+        validate_with_limits(product_line, str, 3, 4)
         self._product_line = product_line
+        
+    def name_first_last(self):
+        return f"{self.name_first, self.name_last}"
+    
+    def name_last_first(self):
+        return f"{self.name_last}, {self.name_first}"

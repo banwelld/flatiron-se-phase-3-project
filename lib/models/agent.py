@@ -1,4 +1,5 @@
-from helpers import validate_date, validate_type
+from supervisor import Supervisor
+from helpers import validate_date, validate_object, validate_with_limits
 
 class Agent():
     
@@ -9,7 +10,7 @@ class Agent():
         name_first: str, 
         name_last: str, 
         date_hired: str, 
-        supervisor, 
+        supervisor: Supervisor, 
         id_=None
     ):
         validate_date(date_hired)
@@ -20,8 +21,9 @@ class Agent():
         self.supervisor = supervisor
         Agent.all.append(self)
         
+        
     def __str__(self):
-        return f"{type(self).__name__}: {self.name_last}, {self.name_first}"
+        return f"{type(self).__name__}: {self.name_last_first}"
         
     @property
     def name_first(self):
@@ -29,7 +31,7 @@ class Agent():
     
     @name_first.setter
     def name_first(self, name_first):
-        validate_type(name_first, str, 20)
+        validate_with_limits(name_first, str, 1, 20)
         self._name_first = name_first
     
     @property
@@ -38,7 +40,7 @@ class Agent():
     
     @name_last.setter
     def name_last(self, name_last):
-        validate_type(name_last, str, 30)
+        validate_with_limits(name_last, str, 1, 30)
         self._name_last = name_last
 
     @property
@@ -51,5 +53,11 @@ class Agent():
     
     @supervisor.setter
     def supervisor(self, supervisor):
-        validate_type(supervisor, str)
+        validate_object(supervisor, Supervisor)
         self._supervisor = supervisor
+    
+    def name_first_last(self):
+        return f"{self.name_first, self.name_last}"
+    
+    def name_last_first(self):
+        return f"{self.name_last}, {self.name_first}"
