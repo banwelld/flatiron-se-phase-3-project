@@ -1,22 +1,22 @@
 from models.employee import Employee
 from models.department import Department
+from helpers import validate_object
 
-class Agent(Employee):
+class Agent():
     
     all = []
     
     def __init__(
         self,
-        first_name: str,
-        last_name: str,
-        hire_date: str,
+        employee: Employee,
         department: Department,
         bilingual: bool = False,
-        employee_id: int = None
+        agent_id: int = None
     ):
-        super().__init__(first_name, last_name, hire_date)
-        self.department = department
-        self.bilingual = bilingual
+        self.employee = employee
+        validate_object(department, Department)
+        self._department = department
+        self._bilingual = bilingual
         Agent.all.append(self)
         
         
@@ -24,19 +24,18 @@ class Agent(Employee):
         return f"{type(self).__name__}"
         
     @property
-    def employee_id(self):
-        return self._employee_id
+    def employee(self):
+        return self._employee
     
-    @employee_id.setter
-    def employee_id(self, employee_id):
-        validate_id(employee_id, str, 1, 20)
-        self._employee_id = employee_id
+    @employee.setter
+    def employee(self, employee):
+        validate_object(employee, Employee)
+        self._employee = employee
     
     @property
-    def supervisor_id(self):
-        return self._supervisor_id
+    def department(self):
+        return self._department
     
-    @supervisor_id.setter
-    def supervisor_id(self, supervisor_id):
-        validate_id(supervisor_id, str, 1, 30)
-        self._supervisor_id = supervisor_id
+    @property
+    def bilingual(self):
+        return self._bilingual

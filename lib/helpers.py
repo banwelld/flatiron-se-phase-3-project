@@ -2,7 +2,7 @@ import re
 from datetime import date
 
 
-def within_limits(number: int, min_limit: int, max_limit: int) -> None:
+def within_limits(number: int, min_limit: int, max_limit: int) -> bool:
     return min_limit <= number <= max_limit
 
 
@@ -45,17 +45,26 @@ def validate_object(item, expected_type: type) -> None:
 
 
 def validate_name(name: str, max_length: int):
-    if not within_limits(len(name), 2, max_length):
+    trimmed_name = " ".join(name.split())
+    if not within_limits(len(trimmed_name), 2, max_length):
         raise ValueError(
-            f"Name '{name}' length is invalid, expected between 2 and "
-            f"{max_length} characters, but got {len(name)}"
+            f"Name '{trimmed_name}' length is invalid, expected between 2 and "
+            f"{max_length} characters, but got {len(trimmed_name)}"
         )
         
     pattern = r"[^a-zA-Z '.\-]"
-    match = re.match(name, pattern)
+    match = re.match(trimmed_name, pattern)
     if match is None:
         raise ValueError(
-            f"Name '{name}' contains invalid character '{match.group()}', "
-            "only letters, periods (.), hyphens (-), and apostrophes (') "
-            "are allowed"
+            f"Name '{trimmed_name}' contains invalid character "
+            "'{match.group()}', only letters, periods (.), hyphens (-), "
+            "and apostrophes (') are allowed"
+        )
+        
+        
+def validate_score(value: int, max_limit: int):
+    if not within_limits(int(value), 0, max_limit):
+        raise ValueError(
+            f"Score '{value}' is out of range, expected "
+            f"<= {max_limit}"
         )
