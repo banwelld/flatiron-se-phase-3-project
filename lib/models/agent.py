@@ -1,5 +1,6 @@
 from models.employee import Employee
 from models.department import Department
+from models.call_review import CallReview
 from helpers import validate_object
 
 class Agent():
@@ -42,3 +43,19 @@ class Agent():
     @property
     def bilingual(self):
         return self._bilingual
+    
+    def reviews(self):
+        return [
+            review for review in CallReview.all
+            if review.agent == self.employee
+        ]
+        
+    def quality_rating(self):
+        scores = [review._quality_score for review in self.reviews()]
+        quality = int(sum(scores) / len(scores) / 20 * 100)
+        return f"{quality}%"
+    
+    def adherence_rating(self):
+        scores = [review._adherence_score for review in self.reviews()]
+        adherence = int(sum(scores) / len(scores) / 10 * 100)
+        return f"{adherence}%"

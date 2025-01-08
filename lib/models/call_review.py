@@ -23,12 +23,12 @@ class CallReview():
         self._agent = agent
         self._supervisor = supervisor
         self._review_date = review_date
-        self._score_quality = quality_score
-        self._score_adherence = adherence_score
+        self._quality_score = quality_score
+        self._adherence_score = adherence_score
         CallReview.all.append(self)
         
     def __str__(self):
-        return f"{type(self).__name__}"
+        return f"{type(self).__name__}: {self.agent.fullname()}"
         
     @property
     def agent(self):
