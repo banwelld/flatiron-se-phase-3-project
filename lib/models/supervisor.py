@@ -1,74 +1,42 @@
-from models.employee import Employee
-from models.agent import Agent
-from models.department import Department
-from models.call_review import CallReview
-from validators import validate_object
+from models.member import Member
+from validators import validate_object, validate_name
 
-class Supervisor():
+class Team():
     
     all = []
     
     def __init__(
         self,
-        employee: Employee,
-        department: Department,
-        employee_id: int = None
+        name: str,
+        captain: Member,
+        id_: int = None
     ):
-        self.employee = employee
-        validate_object(department, Department)
-        self._department = department
-        Supervisor.all.append(self)
+        self.name = name
+        self.captain = captain
+        Team.all.append(self)
         
     def __str__(self):
         return (
-            f"{type(self).__name__}: {self.employee.fullname()} "
-            f"({self.department.name} department)"
+            f"{type(self).__name__}.upper(): {self.name} "
+            f"(Captain: {self.captain.fullname()})"
         )
         
     @property
-    def employee(self):
-        return self._employee
+    def name(self):
+        return self._department_name
     
-    @employee.setter
-    def employee(self, employee):
-        validate_object(employee, Employee)
-        self._employee = employee
+    @name.setter
+    def name(self, name):
+        validate_name(name, 20)
+        self._name = name
     
     @property
-    def department(self):
-        return self._department
+    def captain(self):
+        return self._member
     
-    def direct_reports_agent(self):
-        return [
-            agent for agent in Agent.all
-            if agent.department == self.department
-        ]
+    @captain.setter
+    def captain(self, captain):
+        validate_object(captain, Member)
+        self._captain = captain
         
-    def direct_reports_employee(self):
-        return [
-            agent.employee for agent in Agent.all
-            if agent.department == self.department
-        ]
     
-    def reviews_delivered(self):
-        return [
-            review for review in CallReview.all
-            if review.supervisor == self.employee
-        ]
-        
-    def agent_reviews(self):
-        return [
-            review for review in CallReview.all
-            if review.agent in self.direct_reports_employee()
-        ]
-        
-    def new_review(
-        self,
-        agent: Employee,
-        date: str,
-        quality_score: int,
-        adherence_score: int
-    ) -> CallReview:
-        return CallReview(
-            agent, self.employee, date, quality_score, adherence_score
-        )

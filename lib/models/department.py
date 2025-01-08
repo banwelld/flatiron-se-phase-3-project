@@ -1,3 +1,5 @@
+from models.supervisor import Supervisor
+from models.agent import Agent
 from validators import validate_name
 
 class Department():
@@ -16,4 +18,3 @@ class Department():
         validate_name(name, 12)
         self._name = name
 
-    

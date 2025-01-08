@@ -1,4 +1,4 @@
-from models.employee import Employee
+from models.member import Member
 from models.department import Department
 from models.call_review import CallReview
 from validators import validate_object
@@ -9,12 +9,12 @@ class Agent():
     
     def __init__(
         self,
-        employee: Employee,
+        member: Member,
         department: Department,
         bilingual: bool = False,
         agent_id: int = None
     ):
-        self.employee = employee
+        self.member = member
         validate_object(department, Department)
         self._department = department
         self._bilingual = bilingual
@@ -23,18 +23,18 @@ class Agent():
         
     def __str__(self):
         return (
-            f"{type(self).__name__}: {self.employee.fullname()} "
+            f"{type(self).__name__}: {self.member.fullname()} "
             f"({self.department.name} department)"
         )
         
     @property
-    def employee(self):
-        return self._employee
+    def member(self):
+        return self._member
     
-    @employee.setter
-    def employee(self, employee):
-        validate_object(employee, Employee)
-        self._employee = employee
+    @member.setter
+    def member(self, member):
+        validate_object(member, Member)
+        self._member = member
     
     @property
     def department(self):
@@ -47,7 +47,7 @@ class Agent():
     def reviews(self):
         return [
             review for review in CallReview.all
-            if review.agent == self.employee
+            if review.agent == self.member
         ]
         
     def quality_rating(self):

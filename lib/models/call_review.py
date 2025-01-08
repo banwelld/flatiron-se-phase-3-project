@@ -1,4 +1,4 @@
-from models.employee import Employee
+from models.member import Member
 from validators import validate_date, validate_score, validate_object
 
 class CallReview():
@@ -7,15 +7,15 @@ class CallReview():
     
     def __init__(
         self, 
-        agent: Employee,
-        supervisor: Employee,
+        agent: Member,
+        supervisor: Member,
         review_date: str, 
         quality_score: int,
         adherence_score: int, 
         review_id_=None
     ):
-        validate_object(agent, Employee)
-        validate_object(supervisor, Employee)
+        validate_object(agent, Member)
+        validate_object(supervisor, Member)
         validate_date(review_date)
         validate_score(quality_score, 20)
         validate_score(adherence_score, 10)

@@ -1,6 +1,6 @@
 from validators import validate_date, validate_name
 
-class Employee():
+class Member():
     
     all = []
     

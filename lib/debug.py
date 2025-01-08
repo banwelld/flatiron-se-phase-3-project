@@ -2,7 +2,7 @@
 
 from models.agent import Agent
 from models.supervisor import Supervisor
-from models.employee import Employee
+from models.member import Member
 from models.department import Department
 from models.call_review import CallReview
 import ipdb
@@ -12,22 +12,22 @@ dep02 = Department("Pharmacy")
 dep03 = Department("Dental")
 dep04 = Department("Vision")
 
-emp01 = Employee("Barbara", "Kennedy", "1992/05/06")
-emp02 = Employee("Mary-Lynn", "Myers", "1991/11/09")
-emp03 = Employee("Todd", "Bouman", "1998/07/23")
-emp04 = Employee("Shary", "Last", "1999/09/06")
-emp05 = Employee("Dave", "Banwell", "1999/12/03")
-emp06 = Employee("Kelly", "Flockhart", "1999/03/03")
-emp07 = Employee("Melanie", "Johns", "1999/02/13")
-emp08 = Employee("Scott", "Huson", "2000/02/23")
-emp09 = Employee("Therese", "Carson", "2000/12/05")
-emp10 = Employee("Carol", "Calister", "1999/04/28")
-emp11 = Employee("Shelley", "Grylls", "1995/05/21")
-emp12 = Employee("Barbara", "Lamont", "1983/06/11")
-emp13 = Employee("Heather", "Bondy", "1995/01/02")
-emp14 = Employee("Craig", "Russett", "1998/12/22")
-emp15 = Employee("Stacey", "Woltz", "1995/11/22")
-emp16 = Employee("Carol", "Davis", "1997/03/03")
+emp01 = Member("Barbara", "Kennedy", "1992/05/06")
+emp02 = Member("Mary-Lynn", "Myers", "1991/11/09")
+emp03 = Member("Todd", "Bouman", "1998/07/23")
+emp04 = Member("Shary", "Last", "1999/09/06")
+emp05 = Member("Dave", "Banwell", "1999/12/03")
+emp06 = Member("Kelly", "Flockhart", "1999/03/03")
+emp07 = Member("Melanie", "Johns", "1999/02/13")
+emp08 = Member("Scott", "Huson", "2000/02/23")
+emp09 = Member("Therese", "Carson", "2000/12/05")
+emp10 = Member("Carol", "Calister", "1999/04/28")
+emp11 = Member("Shelley", "Grylls", "1995/05/21")
+emp12 = Member("Barbara", "Lamont", "1983/06/11")
+emp13 = Member("Heather", "Bondy", "1995/01/02")
+emp14 = Member("Craig", "Russett", "1998/12/22")
+emp15 = Member("Stacey", "Woltz", "1995/11/22")
+emp16 = Member("Carol", "Davis", "1997/03/03")
 
 agt01 = Agent(emp05, dep01, False)
 agt02 = Agent(emp06, dep01, False)
