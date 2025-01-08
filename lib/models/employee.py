@@ -10,6 +10,9 @@ class Employee():
         validate_date(hire_date)
         self._hire_date = hire_date
         
+    def __str__(self):
+        return f"{type(self).__name__}: {self.fullname()}"
+        
     @property
     def first_name(self):
         return self._first_name
@@ -31,4 +34,6 @@ class Employee():
     @property
     def hire_date(self):
         return self._hire_date
-    
+
+    def fullname(self):
+        return f"{self.first_name} {self.last_name}"

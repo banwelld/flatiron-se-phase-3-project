@@ -21,7 +21,10 @@ class Agent():
         
         
     def __str__(self):
-        return f"{type(self).__name__}"
+        return (
+            f"{type(self).__name__}: {self.employee.fullname()} "
+            f"({self.department.name} department)"
+        )
         
     @property
     def employee(self):

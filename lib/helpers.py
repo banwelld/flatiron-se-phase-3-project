@@ -54,10 +54,10 @@ def validate_name(name: str, max_length: int):
         
     pattern = r"[^a-zA-Z '.\-]"
     match = re.match(trimmed_name, pattern)
-    if match is None:
+    if match is not None:
         raise ValueError(
             f"Name '{trimmed_name}' contains invalid character "
-            "'{match.group()}', only letters, periods (.), hyphens (-), "
+            f"'{match.group()}', only letters, periods (.), hyphens (-), "
             "and apostrophes (') are allowed"
         )
         
