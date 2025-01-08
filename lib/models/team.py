@@ -8,7 +8,7 @@ class Team():
     def __init__(
         self,
         name: str,
-        captain: Member,
+        captain: str,
         id_: int = None
     ):
         self.name = name
@@ -18,7 +18,7 @@ class Team():
     def __str__(self):
         return (
             f"{type(self).__name__}.upper(): {self.name} "
-            f"(Captain: {self.captain.fullname()})"
+            f"(Captain: )"
         )
         
     @property
@@ -27,7 +27,7 @@ class Team():
     
     @name.setter
     def name(self, name):
-        validate_name(name, 20)
+        validate_name(name, 30)
         self._name = name
     
     @property
@@ -36,7 +36,7 @@ class Team():
     
     @captain.setter
     def captain(self, captain):
-        validate_object(captain, Member)
+        validate_name(captain, 5)
         self._captain = captain
         
     
