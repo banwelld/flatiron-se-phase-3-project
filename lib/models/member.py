@@ -1,18 +1,26 @@
-from models.team import Team
-from validators import validate_date, validate_name, validate_object
+from validators import validate_date, validate_name
 
 class Member():
     
     all = []
     
-    def __init__(self, first_name: str, last_name: str, birth_date: str, team: Team):
+    def __init__(
+        self, 
+        first_name: str, 
+        last_name: str, 
+        birth_date: str, 
+        team_id = None, 
+        mem_id = None
+    ):
         self.first_name = first_name
         self.last_name = last_name
         validate_date(birth_date)
         self._birth_date = birth_date
+        self.team_id = team_id
+        self.mem_id = mem_id
         
     def __str__(self):
-        return f"{type(self).__name__}: {self.fullname()}"
+        return f"{type(self).__name__.upper()}: {self.fullname()} ({self.team.name})"
         
     @property
     def first_name(self):
@@ -38,13 +46,6 @@ class Member():
 
     def fullname(self):
         return f"{self.first_name} {self.last_name}"
+
     
-    @property
-    def team(self):
-        return self._team
-    
-    @team.setter
-    def team(self, team):
-        validate_object(team, Team)
-        self._team = team
     
