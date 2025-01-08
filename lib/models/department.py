@@ -1,4 +1,4 @@
-from helpers import validate_name
+from validators import validate_name
 
 class Department():
     

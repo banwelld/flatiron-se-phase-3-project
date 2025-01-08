@@ -2,7 +2,7 @@ from models.employee import Employee
 from models.agent import Agent
 from models.department import Department
 from models.call_review import CallReview
-from helpers import validate_object
+from validators import validate_object
 
 class Supervisor():
     
@@ -61,3 +61,14 @@ class Supervisor():
             review for review in CallReview.all
             if review.agent in self.direct_reports_employee()
         ]
+        
+    def new_review(
+        self,
+        agent: Employee,
+        date: str,
+        quality_score: int,
+        adherence_score: int
+    ) -> CallReview:
+        return CallReview(
+            agent, self.employee, date, quality_score, adherence_score
+        )

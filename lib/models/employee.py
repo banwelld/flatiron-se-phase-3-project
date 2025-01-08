@@ -1,4 +1,4 @@
-from helpers import validate_date, validate_name
+from validators import validate_date, validate_name
 
 class Employee():
     

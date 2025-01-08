@@ -1,7 +1,7 @@
 from models.employee import Employee
 from models.department import Department
 from models.call_review import CallReview
-from helpers import validate_object
+from validators import validate_object
 
 class Agent():
     
