@@ -10,12 +10,12 @@ class Team():
         self,
         name: str,
         captain_id: int,
-        member_limit: int = 5,
+        member_cap: int = 5,
         id: int = None
     ):
         self.name = name
         self.captain_id = int(captain_id)
-        self._member_limit = int(member_limit)
+        self._member_cap = int(member_cap)
         self.id = int(id)
                 
     def __str__(self):
@@ -43,8 +43,8 @@ class Team():
         self._captain = captain
         
     @property
-    def member_limit(self):
-        return self._member_limit
+    def member_cap(self):
+        return self._member_cap
     
     @classmethod
     def create_table(cls):
@@ -55,7 +55,7 @@ class Team():
             id INTEGER PRIMARY KEY,
             name TEXT,
             captain_id INTEGER,
-            member_limit INTEGER,
+            member_cap INTEGER,
             FOREIGN KEY (captain_id) REFERENCES members(id)
             )
         """
@@ -78,10 +78,10 @@ class Team():
         the team to Team.all
         """
         sql = """
-            INSERT INTO teams (name, captain_id, member_limit)
+            INSERT INTO teams (name, captain_id, member_cap)
             VALUES (?, ?, ?)
         """
-        CURSOR.execute(sql, (self.name, self.captain.mem_id, self.member_limit))
+        CURSOR.execute(sql, (self.name, self.captain.mem_id, self.member_cap))
         CONN.commit()
         
         self.id = CURSOR.lastrowid
@@ -130,7 +130,7 @@ class Team():
         if team := cls.all.get(record[0]):
             team.name = record[1]
             team.captain_id = record[2]
-            team.member_limit = record[3]
+            team.member_cap = record[3]
         else:
             team = cls(record[1], record[2], record[3])
             team.id = record[0]
