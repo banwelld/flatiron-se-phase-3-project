@@ -1,3 +1,4 @@
+from __init__ import CURSOR, CONN
 from validators import validate_date, validate_name
 
 class Member():
@@ -43,6 +44,22 @@ class Member():
     @property
     def hire_date(self):
         return self._hire_date
+    
+    @classmethod
+    def create_table(cls):
+        """Create a database table to persist the Member data"""
+        sql = """
+            CREATE TABLE IF NOT EXISTS members (
+            id INTEGER PRIMARY KEY,
+            first_name TEXT,
+            last_name TEXT,
+            birth_date TEXT,
+            team_id INTEGER,
+            FOREIGN KEY (team_id) REFERENCES teams(id)
+            )
+        """
+        CURSOR.execute(sql)
+        CONN.commit()
 
     def fullname(self):
         return f"{self.first_name} {self.last_name}"
