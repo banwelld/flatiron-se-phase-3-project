@@ -130,9 +130,9 @@ class Member():
         CONN.commit()
         
     def save(self):
-        """Save member data to the database, add the newly-generated
-        id number to the member object's id attribute, and add
-        the member to Member.all
+        """Adds member instance record to the members table in the
+        database and assigns the record's primary key value as the
+        member instance's id. Then adds the instance to Member.all.
         """
         sql = """
             INSERT INTO members (first_name, last_name, birth_date, team_id)
@@ -243,25 +243,38 @@ class Member():
             WHERE first_name = ? AND last_name = ?
         """
         data = CURSOR.execute(sql, (first_name, last_name)).fetchone()
-        
         return cls.parse_db_row(data) or None
     
     def leave_current_team(self):
-        """Change member's team_id to None and change the team's captain_id
-        to None if the member was the team's captain
+        """Assigns team_id attribute of None to the member instance. If
+        the team instance to which the member instance was assigned has
+        a captain_id attribute equal to the member inetance's id,
+        invokes the vacate_captain() method on the team instance.
+        Updates the database record after all changes made.
+        
+        Raises Exception if the member instance has team_id attribute
+        equal to None.
         """
         if self.team_id is not None:
             from models.team import Team
             my_team = Team.fetch_by_id(self.team_id)
             if self.id == my_team.captain_id:
-                my_team.remove_captain()
+                my_team.vacate_captain()
             self.team_id = None
             self.update()
         else:
-            raise ValueError(
-                f"Member '{self.id}' not currently assigned to a team")
+            raise Exception(
+                f"Member '{self.id}' has no team_id attribute")
             
-    def join_team(self, team_id):
+    def join_team(self, team_id: int):
+        """Assigns the specified team_id attribute value to the member
+        instance. If the member instance already has a valid team_id
+        attribute, invokes the leave_current_team() method before
+        assigning the specified team_id to the member instance.
+        
+        Raises ValueError for invalid team_id or Exception if member is
+        already assigned to the specified team.
+        """
         if self.team_id is not team_id:
             from models.team import Team
             if Team.fetch_all()[team_id]:
@@ -270,13 +283,16 @@ class Member():
                 self.team_id = team_id
                 self.update()
             else:
-                raise ValueError(f"ID '{team_id}' has not been assigned to a team")
+                raise ValueError(f"'{team_id}' invalid team ID")
         else:
-            raise ValueError(
+            raise Exception(
                 f"Member '{self.id}' is already associated with team '{team_id}'")
     
     @classmethod
     def list_free_agents(cls):
+        """Returns a list of member instances with team_id attributes
+        having a value of None
+        """
         return [
             member for member in cls.fetch_all()
             if member.team_id == None]

@@ -29,13 +29,15 @@ class Team():
         if not 5 <= len(name) <= 30:
             raise ValueError(
                 f"Name '{name}' length is invalid, expected between 2 "
-                f"and 20 characters, but got {len(name)}")
+                f"and 20 characters, but got {len(name)}"
+            )
             
         anomaly = re.search(r"[^a-zA-Z '.\-]", name).group()
         if anomaly is not None:
             raise ValueError(
                 f"'{name}' contains invalid character '{anomaly}', "
-                f"only letters, periods, hyphens, or apostrophes are allowed")
+                f"only letters, periods, hyphens, or apostrophes are allowed"
+            )
         
         self._name = name
     
@@ -154,7 +156,6 @@ class Team():
             FROM teams
         """
         data = CURSOR.execute(sql).fetchall()
-        
         return [cls.parse_db_row(row) for row in data]
     
     @classmethod
@@ -167,7 +168,6 @@ class Team():
             WHERE id = ?
         """
         data = CURSOR.execute(sql, (id,)).fetchone()
-        
         return cls.parse_db_row(data) or None
     
     @classmethod
@@ -181,11 +181,11 @@ class Team():
             WHERE name = ?
         """
         data = CURSOR.execute(sql, (name,)).fetchone()
-        
         return cls.parse_db_row(data) or None
     
     def members(self):
-        """Return a list of all members of the team instance
+        """Return a list of all members of the team instance or
+        return an empty list if team has no members
         """
         from models.member import Member
 
@@ -195,10 +195,25 @@ class Team():
             WHERE team_id = ?
         """
         data = CURSOR.execute(sql, (self.id,),).fetchall()
-        
         return [Member.parse_db_row(row) for row in data]
     
-    def remove_captain(self) -> None:
+    def has_member(self, member_id):
+        """Return boolean True/False depending on whether the member_id
+        passed as an argument is assigned to the team
+        """
+        return any(
+            getattr(item, "member_id", None) == member_id 
+            for item in self.members().values()
+        )
+    
+    def assign_captain(self, member_id):
+        if self.has_member(member_id):
+            self.captain_id = member_id
+        else:
+            raise ValueError(
+                f"Member '{member_id}' is not assigned to team '{self.id}'")
+    
+    def vacate_captain(self):
         """Change the team's captain_id to None to vacate the position.
         """
         if self.captain_id:
@@ -206,4 +221,5 @@ class Team():
             self.update()
             
     def isFull(self):
+        """Indicates that a team membership has met its member cap"""
         return True if len(self.members()) >= self.member_cap else False
