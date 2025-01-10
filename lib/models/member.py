@@ -3,14 +3,14 @@ from validators import validate_date, validate_name
 
 class Member():
     
-    all = []
+    all = {}
     
     def __init__(
         self, 
-        first_name: str, 
+        first_name: str,
         last_name: str, 
         birth_date: str, 
-        team_id: int = None, 
+        team_id: int = 0, 
         id: int = None
     ):
         self.first_name = first_name
@@ -18,10 +18,10 @@ class Member():
         validate_date(birth_date)
         self._birth_date = birth_date
         self.team_id = int(team_id)
-        self.id = int(id)
+        self.id = id
         
     def __str__(self):
-        return f"{type(self).__name__.upper()}: {self.fullname()} ({self.team.name})"
+        return f"{type(self).__name__.upper()}: {self.first_name} {self.last_name}"
         
     @property
     def first_name(self):
@@ -45,6 +45,14 @@ class Member():
     def birth_date(self):
         return self._birth_date
     
+    @property
+    def team_id(self):
+        return self.team_id
+    
+    @team_id.setter
+    def team_id(self, team_id):
+        self.team_id = int(team_id)
+    
     @classmethod
     def create_table(cls):
         """Create a database table to persist the member data.
@@ -53,7 +61,7 @@ class Member():
             CREATE TABLE IF NOT EXISTS members (
             id INTEGER PRIMARY KEY,
             first_name TEXT,
-            last_name TEXT
+            last_name TEXT,
             birth_date TEXT,
             team_id INTEGER,
             FOREIGN KEY (team_id) REFERENCES teams(id)
@@ -85,7 +93,7 @@ class Member():
             self.first_name, self.last_name, self.birth_date, self.team_id))
         CONN.commit()
         
-        self.id = CURSOR.lastrowid
+        self._id = CURSOR.lastrowid
         type(self).all[self.id] = self
     
     def update(self):
@@ -108,7 +116,7 @@ class Member():
         
     @classmethod
     def create(
-        self, 
+        cls,
         first_name: str, 
         last_name: str, 
         birth_date: str, 
@@ -116,6 +124,7 @@ class Member():
     ):
         """Initialize a member object and save the member data to the database.
         """
+        cls.create_table()  # only if not table exists
         member = Member(first_name, last_name, birth_date, team_id)
         member.save()
         return member
@@ -140,7 +149,7 @@ class Member():
         if member := cls.all.get(record[0]):
             member.first_name = record[1]
             member.last_name = record[2]
-            member.birth_date = record[3]
+            member._birth_date = record[3]
             member.team_id = record[4]
         else:
             member = cls(record[1], record[2], record[3], record[4])
@@ -149,7 +158,7 @@ class Member():
         return member
     
     @classmethod
-    def fetch_whole_table(cls):
+    def fetch_all(cls):
         """Fetch all member records from database and return as a list
         """
         sql = """
@@ -166,11 +175,12 @@ class Member():
         """
         sql = """
             SELECT *
-            FROM teams
+            FROM members
             WHERE id = ?
         """
-        data = CURSOR.execute(sql, (id,)).fetchone()
         
+        data = CURSOR.execute(sql, (id,)).fetchone()
+                
         return cls.parse_db_row(data) or None
     
     @classmethod
@@ -180,10 +190,9 @@ class Member():
         """
         sql = """
             SELECT *
-            FROM teams
+            FROM members
             WHERE first_name = ? AND last_name = ?
         """
         data = CURSOR.execute(sql, (first_name, last_name)).fetchone()
         
         return cls.parse_db_row(data) or None
-    

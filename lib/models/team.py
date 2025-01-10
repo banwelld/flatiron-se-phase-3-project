@@ -1,6 +1,5 @@
 from __init__ import CURSOR, CONN
-from models.member import Member
-from validators import validate_name, validate_object
+from validators import validate_name, validate_captain
 
 class Team():
     
@@ -9,20 +8,17 @@ class Team():
     def __init__(
         self,
         name: str,
-        captain_id: int,
+        captain_id: int = None,
         member_cap: int = 5,
-        id: int = None
+        id=None
     ):
         self.name = name
-        self.captain_id = int(captain_id)
+        self.captain_id = captain_id
         self._member_cap = int(member_cap)
-        self.id = int(id)
+        self.id = id
                 
     def __str__(self):
-        return (
-            f"{type(self).__name__.upper()}: {self.name} "
-            f"(Captain: {self.captain.fullname()})"
-        )
+        return f"{type(self).__name__.upper()}: {self.name}"
         
     @property
     def name(self):
@@ -34,13 +30,14 @@ class Team():
         self._name = name
     
     @property
-    def captain(self):
-        return self._member
+    def captain_id(self):
+        return self._captain_id
     
-    @captain.setter
-    def captain(self, captain):
-        validate_object(captain, Member)
-        self._captain = captain
+    @captain_id.setter
+    def captain_id(self, captain_id):
+        if captain_id is not None:
+            validate_captain(self.id, captain_id)
+        self._captain_id = captain_id
         
     @property
     def member_cap(self):
@@ -56,7 +53,7 @@ class Team():
             name TEXT,
             captain_id INTEGER,
             member_cap INTEGER,
-            FOREIGN KEY (captain_id) REFERENCES members(id)
+            FOREIGN KEY (captain_id) REFERENCES members(id_)
             )
         """
         CURSOR.execute(sql)
@@ -81,7 +78,7 @@ class Team():
             INSERT INTO teams (name, captain_id, member_cap)
             VALUES (?, ?, ?)
         """
-        CURSOR.execute(sql, (self.name, self.captain.mem_id, self.member_cap))
+        CURSOR.execute(sql, (self.name, self.captain_id, self.member_cap))
         CONN.commit()
         
         self.id = CURSOR.lastrowid
@@ -100,7 +97,7 @@ class Team():
         CONN.commit()
         
     @classmethod
-    def create(self, name: str, captain_id: int):
+    def create(self, name: str, captain_id: int = 0):
         """Initialize a team object and save the team data to the database.
         
         Disallows customized member limits as this is only allowed to create
@@ -130,7 +127,7 @@ class Team():
         if team := cls.all.get(record[0]):
             team.name = record[1]
             team.captain_id = record[2]
-            team.member_cap = record[3]
+            team._member_cap = record[3]
         else:
             team = cls(record[1], record[2], record[3])
             team.id = record[0]
@@ -138,7 +135,7 @@ class Team():
         return team
     
     @classmethod
-    def fetch_whole_table(cls):
+    def fetch_all(cls):
         """Fetch all team records from database and return as a list
         """
         sql = """
@@ -176,3 +173,43 @@ class Team():
         
         return cls.parse_db_row(data) or None
     
+    def members(self):
+        """Return a list of all members of the team instance
+        """
+        from models.member import Member
+
+        sql = """
+            SELECT *
+            FROM members
+            WHERE team_id = ?
+        """
+        data = CURSOR.execute(sql, (self.id,),).fetchall()
+        
+        return [Member.parse_db_row(row) for row in data]
+    
+    def remove_captain(self):
+        """Changes the team's captain_id to None such that the position
+        is vacant.
+        """
+        if self.captain_id:
+            self.captain_id = None
+            self.update()
+    
+    def remove_member(self, member_id: int):
+        """Changes a member's team_id to None such that they do not belong
+        to any team and changes the team's captain_id to None if the member
+        was also the team's captain
+        """
+        from models.member import Member
+        if member := Member.fetch_by_id(member_id):
+            if member.team_id == self.id:
+                if member_id == self.captain_id:
+                    self.remove_captain()
+                member.team_id = None
+                member.update()
+            else:
+                raise ValueError(
+                    f"Member '{member_id}' is not a member of team "
+                    f"'{self.id}'")
+        else:
+            raise ValueError(f"Member id '{member_id}' is unassigned.")

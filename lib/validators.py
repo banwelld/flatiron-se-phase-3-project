@@ -27,21 +27,18 @@ def valid_date_value(date_str: str) -> bool:
 def validate_date(date_str: str) -> None:
     if not valid_date_format(date_str):
         raise ValueError(
-            f"Date '{date_str}' format is invalid, expected 'YYYY/MM/DD'"
-        )
+            f"Date '{date_str}' format is invalid, expected 'YYYY/MM/DD'")
         
     if not valid_date_value(date_str):
         raise ValueError(
-            f"Date '{date_str}' value is invalid (check month/day combination)"
-        )
+            f"Date '{date_str}' is invalid (check month/day combination)")
 
 
 def validate_object(item, expected_type: type) -> None:
     if not isinstance(item, expected_type):
         raise ValueError(
             f"Object '{item}' type is invalid, expected "
-            f"'{expected_type.__name__}', but got '{type(item).__name__}'"
-        )
+            f"'{expected_type.__name__}', but got '{type(item).__name__}'")
 
 
 def validate_name(name: str, max_length: int):
@@ -49,8 +46,7 @@ def validate_name(name: str, max_length: int):
     if not within_limits(len(trimmed_name), 2, max_length):
         raise ValueError(
             f"Name '{trimmed_name}' length is invalid, expected between 2 and "
-            f"{max_length} characters, but got {len(trimmed_name)}"
-        )
+            f"{max_length} characters, but got {len(trimmed_name)}")
         
     pattern = r"[^a-zA-Z '.\-]"
     match = re.match(trimmed_name, pattern)
@@ -58,13 +54,26 @@ def validate_name(name: str, max_length: int):
         raise ValueError(
             f"Name '{trimmed_name}' contains invalid character "
             f"'{match.group()}', only letters, periods (.), hyphens (-), "
-            "and apostrophes (') are allowed"
-        )
+            "and apostrophes (') are allowed")
         
         
-def validate_score(value: int, max_limit: int):
+def validate_int_value(value: int, max_limit: int):
     if not within_limits(int(value), 0, max_limit):
         raise ValueError(
-            f"Score '{value}' is out of range, expected "
-            f"<= {max_limit}"
-        )
+            f"Integer '{value}' is out of range, expected <= {max_limit}")
+
+
+def validate_captain(team_id, captain_id):
+    from models.member import Member
+    captain = Member.fetch_by_id(captain_id)
+    
+    if not captain:
+        raise ValueError(
+            f"No record in 'members' table having id '{captain_id}'")
+        
+    if not captain.team_id == team_id:
+        raise ValueError(
+            "Member/team mismatch: Member belongs to team having id "
+            f"'{captain.team_id}', not '{team_id}'")
+        
+    
