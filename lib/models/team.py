@@ -1,5 +1,5 @@
 from __init__ import CURSOR, CONN
-from validators import validate_name, validate_captain
+import re
 
 class Team():
     
@@ -8,9 +8,9 @@ class Team():
     def __init__(
         self,
         name: str,
-        captain_id: int = None,
+        captain_id: int | None = None,
         member_cap: int = 5,
-        id=None
+        id: int | None = None
     ):
         self.name = name
         self.captain_id = captain_id
@@ -26,7 +26,17 @@ class Team():
     
     @name.setter
     def name(self, name):
-        validate_name(name, 30)
+        if not 5 <= len(name) <= 30:
+            raise ValueError(
+                f"Name '{name}' length is invalid, expected between 2 "
+                f"and 20 characters, but got {len(name)}")
+            
+        anomaly = re.search(r"[^a-zA-Z '.\-]", name).group()
+        if anomaly is not None:
+            raise ValueError(
+                f"'{name}' contains invalid character '{anomaly}', "
+                f"only letters, periods, hyphens, or apostrophes are allowed")
+        
         self._name = name
     
     @property
@@ -35,8 +45,10 @@ class Team():
     
     @captain_id.setter
     def captain_id(self, captain_id):
-        if captain_id is not None:
-            validate_captain(self.id, captain_id)
+        id_list = [member.id for member in self.members()]
+        if captain_id not in id_list:
+            raise ValueError(
+                f"ID '{captain_id}' does not belong to a current team member")
         self._captain_id = captain_id
         
     @property
@@ -45,7 +57,7 @@ class Team():
     
     @classmethod
     def create_table(cls):
-        """Create a database table to persist the team data.
+        """Create a database table to house the team data.
         """
         sql = """
             CREATE TABLE IF NOT EXISTS teams (
@@ -61,7 +73,7 @@ class Team():
         
     @classmethod
     def drop_table(cls):
-        """Drop the database table where team data is persisted.
+        """Drop the database table housing team data.
         """
         sql = """
             DROP TABLE IF EXISTS teams
@@ -70,9 +82,8 @@ class Team():
         CONN.commit()
         
     def save(self):
-        """Save team data to the database, add the newly-generated
-        id number to the team object's id attribute, and add
-        the team to Team.all
+        """Save team data to the database, add id number to the team object's
+        id attribute, and add the team to Team.all.
         """
         sql = """
             INSERT INTO teams (name, captain_id, member_cap)
@@ -85,8 +96,7 @@ class Team():
         type(self).all[self.id] = self
     
     def update(self):
-        """Persist updates to team data to the team's record in the
-        database.
+        """Persist team attribute updates to the team's database record.
         """
         sql = """
             UPDATE teams
@@ -99,16 +109,14 @@ class Team():
     @classmethod
     def create(self, name: str, captain_id: int = 0):
         """Initialize a team object and save the team data to the database.
-        
-        Disallows customized member limits as this is only allowed to create
-        special non-team teams.
         """
         team = Team(name, captain_id)
         team.save()
         return team
     
     def delete(self):
-        """Expunge team record from database and from Team.all
+        """Expunge team record from database, change team_id to None
+        for all team members and remove instance from Team.all
         """
         sql = """
             DELETE FROM teams
@@ -116,6 +124,9 @@ class Team():
         """
         CURSOR.execute(sql, (self.id,),)
         CONN.commit()
+        
+        for member in self.members():
+            self.remove_member(member.id)
                 
         del type(self).all[self.id]
         self.id = None
@@ -187,29 +198,9 @@ class Team():
         
         return [Member.parse_db_row(row) for row in data]
     
-    def remove_captain(self):
-        """Changes the team's captain_id to None such that the position
-        is vacant.
+    def remove_captain(self) -> None:
+        """Change the team's captain_id to None to vacate the position.
         """
         if self.captain_id:
             self.captain_id = None
             self.update()
-    
-    def remove_member(self, member_id: int):
-        """Changes a member's team_id to None such that they do not belong
-        to any team and changes the team's captain_id to None if the member
-        was also the team's captain
-        """
-        from models.member import Member
-        if member := Member.fetch_by_id(member_id):
-            if member.team_id == self.id:
-                if member_id == self.captain_id:
-                    self.remove_captain()
-                member.team_id = None
-                member.update()
-            else:
-                raise ValueError(
-                    f"Member '{member_id}' is not a member of team "
-                    f"'{self.id}'")
-        else:
-            raise ValueError(f"Member id '{member_id}' is unassigned.")

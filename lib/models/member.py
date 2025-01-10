@@ -1,5 +1,6 @@
 from __init__ import CURSOR, CONN
-from validators import validate_date, validate_name
+import re
+from datetime import date
 
 class Member():
     
@@ -10,14 +11,31 @@ class Member():
         first_name: str,
         last_name: str, 
         birth_date: str, 
-        team_id: int = 0, 
-        id: int = None
+        team_id: int | None = None, 
+        id: int | None = None
     ):
+        # validate date formet in birth_date
+
+        date_match = re.match(r"^[0-9]{4}(/[0-9]{2}){2}$", birth_date)
+        if date_match is None:
+            raise ValueError(
+                f"Date '{birth_date}' format invalid, expected 'YYYY/MM/DD'")
+            
+        #validate date value in birth_date
+            
+        date_yr = int(birth_date[:4])
+        date_mon = int(birth_date[5:7])
+        date_day = int(birth_date[8:])
+        try:
+            date(date_yr, date_mon, date_day)
+        except ValueError:
+            raise ValueError(
+                f"Date '{birth_date}' invalid, check month/day combination")
+        
         self.first_name = first_name
         self.last_name = last_name
-        validate_date(birth_date)
         self._birth_date = birth_date
-        self.team_id = int(team_id)
+        self.team_id = team_id
         self.id = id
         
     def __str__(self):
@@ -29,7 +47,17 @@ class Member():
     
     @first_name.setter
     def first_name(self, first_name):
-        validate_name(first_name, 20)
+        if not 2 <= len(first_name) <= 20:
+            raise ValueError(
+                f"Name '{first_name}' length is invalid, expected between 2 "
+                f"and 20 characters, but got {len(first_name)}")
+            
+        anomaly = re.search(r"[^a-zA-Z '.\-]", first_name).group()
+        if anomaly is not None:
+            raise ValueError(
+                f"'{first_name}' contains invalid character '{anomaly}', "
+                f"only letters, periods, hyphens, or apostrophes are allowed")
+            
         self._first_name = first_name
 
     @property
@@ -38,7 +66,17 @@ class Member():
     
     @last_name.setter
     def last_name(self, last_name):
-        validate_name(last_name, 20)
+        if not 2 <= len(last_name) <= 20:
+            raise ValueError(
+                f"Name '{last_name}' length is invalid, expected between 2 "
+                f"and 20 characters, but got {len(last_name)}")
+            
+        anomaly = re.search(r"[^a-zA-Z '.\-]", last_name).group()
+        if anomaly is not None:
+            raise ValueError(
+                f"'{last_name}' contains invalid character '{anomaly}', "
+                f"only letters, periods, hyphens, or apostrophes are allowed")
+
         self._last_name = last_name
         
     @property
@@ -47,11 +85,22 @@ class Member():
     
     @property
     def team_id(self):
-        return self.team_id
+        return self._team_id
     
     @team_id.setter
     def team_id(self, team_id):
-        self.team_id = int(team_id)
+        from models.team import Team
+        team = Team.fetch_by_id(team_id)
+        
+        if not team:
+            raise ValueError(
+                f"No record in 'teams' table having id '{team_id}'")
+            
+        if len(team.members()) >= team.member_cap:
+            raise OverflowError(
+                f"Team with ID '{team_id}' has reached its member limit.")
+            
+        self._team_id = team_id
     
     @classmethod
     def create_table(cls):
@@ -196,3 +245,15 @@ class Member():
         data = CURSOR.execute(sql, (first_name, last_name)).fetchone()
         
         return cls.parse_db_row(data) or None
+    
+    def leave_current_team(self):
+        """Change member's team_id to None and change the team's captain_id
+        to None if the member was the team's captain
+        """
+        if self.team_id is not None:
+            from models.team import Team
+            my_team = Team.fetch_by_id(self.team_id)
+            if self.id == my_team.captain_id:
+                my_team.remove_captain()
+            self.team_id = None
+            self.update()
