@@ -204,3 +204,6 @@ class Team():
         if self.captain_id:
             self.captain_id = None
             self.update()
+            
+    def isFull(self):
+        return True if len(self.members()) >= self.member_cap else False

@@ -257,3 +257,26 @@ class Member():
                 my_team.remove_captain()
             self.team_id = None
             self.update()
+        else:
+            raise ValueError(
+                f"Member '{self.id}' not currently assigned to a team")
+            
+    def join_team(self, team_id):
+        if self.team_id is not team_id:
+            from models.team import Team
+            if Team.fetch_all()[team_id]:
+                if self.team_id is not None:
+                    self.leave_current_team()
+                self.team_id = team_id
+                self.update()
+            else:
+                raise ValueError(f"ID '{team_id}' has not been assigned to a team")
+        else:
+            raise ValueError(
+                f"Member '{self.id}' is already associated with team '{team_id}'")
+    
+    @classmethod
+    def list_free_agents(cls):
+        return [
+            member for member in cls.fetch_all()
+            if member.team_id == None]
