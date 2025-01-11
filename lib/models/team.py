@@ -1,5 +1,5 @@
 from __init__ import CURSOR, CONN
-import re
+from utility import Utility
 
 class Team():
     
@@ -26,18 +26,7 @@ class Team():
     
     @name.setter
     def name(self, name):
-        if not 5 <= len(name) <= 30:
-            raise ValueError(
-                f"Name '{name}' length is invalid, expected between 2 "
-                f"and 20 characters, but got {len(name)}"
-            )
-            
-        anomaly = re.search(r"[^a-zA-Z '.\-]", name).group()
-        if anomaly is not None:
-            raise ValueError(
-                f"'{name}' contains invalid character '{anomaly}', "
-                f"only letters, periods, hyphens, or apostrophes are allowed"
-            )
+        Utility.is_right_size(len(name), 2, 20)
         
         self._name = name
     
@@ -47,10 +36,16 @@ class Team():
     
     @captain_id.setter
     def captain_id(self, captain_id):
-        id_list = [member.id for member in self.members()]
-        if captain_id not in id_list:
-            raise ValueError(
-                f"ID '{captain_id}' does not belong to a current team member")
+        if (hasattr(self, "id") and 
+            self.id is not None and 
+            captain_id is not None
+        ):
+            members = [member.id for member in self.members()]
+            if captain_id not in members:
+                raise ValueError(
+                    f"ID '{captain_id}' does not belong to a current team "
+                    "member"
+                )
         self._captain_id = captain_id
         
     @property
@@ -109,10 +104,10 @@ class Team():
         CONN.commit()
         
     @classmethod
-    def create(self, name: str, captain_id: int = 0):
+    def create(self, name: str):
         """Initialize a team object and save the team data to the database.
         """
-        team = Team(name, captain_id)
+        team = Team(name)
         team.save()
         return team
     
@@ -168,7 +163,7 @@ class Team():
             WHERE id = ?
         """
         data = CURSOR.execute(sql, (id,)).fetchone()
-        return cls.parse_db_row(data) or None
+        return data if data == None else cls.parse_db_row(data)
     
     @classmethod
     def fetch_by_name(cls, name: str):

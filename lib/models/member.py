@@ -52,11 +52,13 @@ class Member():
                 f"Name '{first_name}' length is invalid, expected between 2 "
                 f"and 20 characters, but got {len(first_name)}")
             
-        anomaly = re.search(r"[^a-zA-Z '.\-]", first_name).group()
+        anomaly = re.search(r"[^a-zA-Z '.\-]", first_name)
         if anomaly is not None:
             raise ValueError(
-                f"'{first_name}' contains invalid character '{anomaly}', "
-                f"only letters, periods, hyphens, or apostrophes are allowed")
+                f"'{first_name}' contains invalid character "
+                f"'{anomaly.group()}', only letters, periods, hyphens, or "
+                "apostrophes are allowed"
+            )
             
         self._first_name = first_name
 
@@ -71,11 +73,13 @@ class Member():
                 f"Name '{last_name}' length is invalid, expected between 2 "
                 f"and 20 characters, but got {len(last_name)}")
             
-        anomaly = re.search(r"[^a-zA-Z '.\-]", last_name).group()
+        anomaly = re.search(r"[^a-zA-Z '.\-]", last_name)
         if anomaly is not None:
             raise ValueError(
-                f"'{last_name}' contains invalid character '{anomaly}', "
-                f"only letters, periods, hyphens, or apostrophes are allowed")
+                f"'{last_name}' contains invalid character "
+                f"'{anomaly.group()}', only letters, periods, hyphens, or "
+                "apostrophes are allowed"
+            )
 
         self._last_name = last_name
         
@@ -89,16 +93,13 @@ class Member():
     
     @team_id.setter
     def team_id(self, team_id):
-        from models.team import Team
-        team = Team.fetch_by_id(team_id)
-        
-        if not team:
-            raise ValueError(
-                f"No record in 'teams' table having id '{team_id}'")
-            
-        if len(team.members()) >= team.member_cap:
-            raise OverflowError(
-                f"Team with ID '{team_id}' has reached its member limit.")
+        if team_id is not None:
+            from models.team import Team
+            if team := Team.fetch_by_id(team_id):
+                if team.isFull():
+                    raise OverflowError(
+                        f"Team with ID '{team_id}' has reached its "
+                        "member limit.")
             
         self._team_id = team_id
     
@@ -169,7 +170,7 @@ class Member():
         first_name: str, 
         last_name: str, 
         birth_date: str, 
-        team_id: int
+        team_id: int | None = None
     ):
         """Initialize a member object and save the member data to the database.
         """
@@ -199,9 +200,9 @@ class Member():
             member.first_name = record[1]
             member.last_name = record[2]
             member._birth_date = record[3]
-            member.team_id = record[4]
+            member.team_id = record[4] if record[4] else None
         else:
-            member = cls(record[1], record[2], record[3], record[4])
+            member = Member(record[1], record[2], record[3], record[4])
             member.id = record[0]
             cls.all[member.id] = member
         return member
@@ -215,7 +216,7 @@ class Member():
             FROM members
         """
         data = CURSOR.execute(sql).fetchall()
-        
+                
         return [cls.parse_db_row(row) for row in data]
     
     @classmethod
