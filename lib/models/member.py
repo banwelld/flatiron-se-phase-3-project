@@ -1,7 +1,17 @@
 from __init__ import CURSOR, CONN
-import re
-from datetime import date
+from models.team import Team
+from utility import Utility
 
+"""
+TODO: Change the error message for numbers in range
+TODO: See why None appears instead of the actual value for poorly formatted date (ValueError: 'None' format invalid, expected 'YYYY/MM/DD')
+TODO: Test: RecursionError: maximum recursion depth exceeded
+            Team.fetch_by_id(4).members()
+            Member.fetch_all()
+            print(Member.fetch_by_name("Joe", "Blow"))
+            Member.fetch_by_id(17).leave_current_team()
+            Member.list_free_agents()
+"""
 class Member():
     
     all = {}
@@ -14,23 +24,11 @@ class Member():
         team_id: int | None = None, 
         id: int | None = None
     ):
-        # validate date formet in birth_date
 
-        date_match = re.match(r"^[0-9]{4}(/[0-9]{2}){2}$", birth_date)
-        if date_match is None:
-            raise ValueError(
-                f"Date '{birth_date}' format invalid, expected 'YYYY/MM/DD'")
-            
-        #validate date value in birth_date
-            
-        date_yr = int(birth_date[:4])
-        date_mon = int(birth_date[5:7])
-        date_day = int(birth_date[8:])
-        try:
-            date(date_yr, date_mon, date_day)
-        except ValueError:
-            raise ValueError(
-                f"Date '{birth_date}' invalid, check month/day combination")
+        # Validate birth_date format and month/day combination
+        
+        Utility.check_date_format(birth_date)
+        Utility.check_valid_date(birth_date)
         
         self.first_name = first_name
         self.last_name = last_name
@@ -47,19 +45,9 @@ class Member():
     
     @first_name.setter
     def first_name(self, first_name):
-        if not 2 <= len(first_name) <= 20:
-            raise ValueError(
-                f"Name '{first_name}' length is invalid, expected between 2 "
-                f"and 20 characters, but got {len(first_name)}")
-            
-        anomaly = re.search(r"[^a-zA-Z '.\-]", first_name)
-        if anomaly is not None:
-            raise ValueError(
-                f"'{first_name}' contains invalid character "
-                f"'{anomaly.group()}', only letters, periods, hyphens, or "
-                "apostrophes are allowed"
-            )
-            
+        length = len(first_name)
+        Utility.check_in_range(length, 2, 20)
+        Utility.check_valid_chars(first_name, r"[^a-zA-Z '.\-]")
         self._first_name = first_name
 
     @property
@@ -68,19 +56,9 @@ class Member():
     
     @last_name.setter
     def last_name(self, last_name):
-        if not 2 <= len(last_name) <= 20:
-            raise ValueError(
-                f"Name '{last_name}' length is invalid, expected between 2 "
-                f"and 20 characters, but got {len(last_name)}")
-            
-        anomaly = re.search(r"[^a-zA-Z '.\-]", last_name)
-        if anomaly is not None:
-            raise ValueError(
-                f"'{last_name}' contains invalid character "
-                f"'{anomaly.group()}', only letters, periods, hyphens, or "
-                "apostrophes are allowed"
-            )
-
+        length = len(last_name)
+        Utility.check_in_range(length, 2, 30)
+        Utility.check_valid_chars(last_name, r"[^a-zA-Z '.\-]")
         self._last_name = last_name
         
     @property
@@ -94,29 +72,35 @@ class Member():
     @team_id.setter
     def team_id(self, team_id):
         if team_id is not None:
-            from models.team import Team
-            if team := Team.fetch_by_id(team_id):
-                if team.isFull():
-                    raise OverflowError(
-                        f"Team with ID '{team_id}' has reached its "
-                        "member limit.")
-            
+            if not Team.exists(team_id):
+                raise ValueError(f"'{team_id}' not a valid team ID number.")
+            if Team.fetch_by_id(team_id).isFull():
+                raise OverflowError(
+                    f"Team with ID '{team_id}' has reached its member limit.")           
         self._team_id = team_id
     
     @classmethod
-    def create_table(cls):
-        """Create a database table to persist the member data.
-        """
-        sql = """
-            CREATE TABLE IF NOT EXISTS members (
-            id INTEGER PRIMARY KEY,
-            first_name TEXT,
-            last_name TEXT,
-            birth_date TEXT,
-            team_id INTEGER,
-            FOREIGN KEY (team_id) REFERENCES teams(id)
-            )
-        """
+    def create_member_tbl(cls):
+        members_cols = {
+            "id": "INTEGER PRIMARY KEY",
+            "first_name": "TEXT",
+            "last_name": "TEXT",
+            "birth_date": "TEXT",
+            "team_id": "INTEGER",
+            "FOREIGN KEY": "{team_id} REFERENCES teams(id)"
+        }
+        cls.create_table(members_cols)
+    
+    @classmethod    
+    def create_table(columns: dict[int]):
+        col_list = [
+            f"{column}: {attribute}" for column, attribute
+            in columns.items()
+        ]
+        col_str = ", ".join(col_list)
+        
+        sql = f"CREATE TABLE IF NOT EXISTS members ({col_str})"
+
         CURSOR.execute(sql)
         CONN.commit()
         
@@ -219,32 +203,16 @@ class Member():
                 
         return [cls.parse_db_row(row) for row in data]
     
-    @classmethod
-    def fetch_by_id(cls, id: int):
-        """Fetch the first record from the members table matching the id.
+    def fetch_by_criteria(cls, col_name: str, criteria: str | int):
+        """Fetches a row from the teams table column specified in the
+        col_name argument, if it contains the value in the criteria
+        argument. Returns the team instance or none if no record
+        matched the criteria.
         """
-        sql = """
-            SELECT *
-            FROM members
-            WHERE id = ?
-        """
-        
-        data = CURSOR.execute(sql, (id,)).fetchone()
-                
-        return cls.parse_db_row(data) or None
-    
-    @classmethod
-    def fetch_by_name(cls, first_name: str, last_name: str):
-        """Fetch the first record from the members table matching the
-        member name.
-        """
-        sql = """
-            SELECT *
-            FROM members
-            WHERE first_name = ? AND last_name = ?
-        """
-        data = CURSOR.execute(sql, (first_name, last_name)).fetchone()
-        return cls.parse_db_row(data) or None
+        db_row = Utility.fetch_db_row("teams", {col_name: criteria})
+        if db_row:
+            return cls.parse_db_row(db_row)
+        return None
     
     def leave_current_team(self):
         """Assigns team_id attribute of None to the member instance. If
@@ -257,7 +225,6 @@ class Member():
         equal to None.
         """
         if self.team_id is not None:
-            from models.team import Team
             my_team = Team.fetch_by_id(self.team_id)
             if self.id == my_team.captain_id:
                 my_team.vacate_captain()
@@ -276,18 +243,19 @@ class Member():
         Raises ValueError for invalid team_id or Exception if member is
         already assigned to the specified team.
         """
-        if self.team_id is not team_id:
-            from models.team import Team
-            if Team.fetch_all()[team_id]:
-                if self.team_id is not None:
-                    self.leave_current_team()
-                self.team_id = team_id
-                self.update()
-            else:
+        if self.team_id is not None:
+            if not Team.exists(team_id):
                 raise ValueError(f"'{team_id}' invalid team ID")
-        else:
-            raise Exception(
-                f"Member '{self.id}' is already associated with team '{team_id}'")
+            
+            if self.team_id == team_id:
+                raise Exception(
+                    f"Member '{self.id}' is already associated with team '{team_id}'")
+            
+            self.leave_current_team()
+        
+        self.team_id = team_id
+        self.update()
+            
     
     @classmethod
     def list_free_agents(cls):

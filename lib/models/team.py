@@ -26,8 +26,9 @@ class Team():
     
     @name.setter
     def name(self, name):
-        Utility.is_right_size(len(name), 2, 20)
-        
+        length = len(name)
+        Utility.check_in_range(length, 4, 30)
+        Utility.check_valid_chars(name, r"[^a-zA-Z '.\-]")
         self._name = name
     
     @property
@@ -54,7 +55,7 @@ class Team():
     
     @classmethod
     def create_table(cls):
-        """Create a database table to house the team data.
+        """Create a database table (teams) to house the team data.
         """
         sql = """
             CREATE TABLE IF NOT EXISTS teams (
@@ -62,7 +63,7 @@ class Team():
             name TEXT,
             captain_id INTEGER,
             member_cap INTEGER,
-            FOREIGN KEY (captain_id) REFERENCES members(id_)
+            FOREIGN KEY (captain_id) REFERENCES members(id)
             )
         """
         CURSOR.execute(sql)
@@ -79,8 +80,8 @@ class Team():
         CONN.commit()
         
     def save(self):
-        """Save team data to the database, add id number to the team object's
-        id attribute, and add the team to Team.all.
+        """Save team record to the teams table, add id number to the
+        team instance's id attribute, and add the team to Team.all.
         """
         sql = """
             INSERT INTO teams (name, captain_id, member_cap)
@@ -93,7 +94,8 @@ class Team():
         type(self).all[self.id] = self
     
     def update(self):
-        """Persist team attribute updates to the team's database record.
+        """Save team attribute updates to the team's record in the
+        teams table.
         """
         sql = """
             UPDATE teams
@@ -105,20 +107,19 @@ class Team():
         
     @classmethod
     def create(self, name: str):
-        """Initialize a team object and save the team data to the database.
+        """Instantiate a team object and save the team data to the
+        teams table.
         """
         team = Team(name)
         team.save()
         return team
     
     def delete(self):
-        """Expunge team record from database, change team_id to None
+        """Expunge team record from teams table, change team_id to None
         for all team members and remove instance from Team.all
         """
-        sql = """
-            DELETE FROM teams
-            WHERE id = ?
-        """
+        sql = "DELETE FROM teams WHERE id = ?"
+
         CURSOR.execute(sql, (self.id,),)
         CONN.commit()
         
@@ -130,7 +131,8 @@ class Team():
         
     @classmethod
     def parse_db_row(cls, record: list):
-        """Reconstitute a team instance from the team's database record.
+        """Reconstitute a team instance from the team's record in the
+        teams table.
         """
         if team := cls.all.get(record[0]):
             team.name = record[1]
@@ -144,39 +146,24 @@ class Team():
     
     @classmethod
     def fetch_all(cls):
-        """Fetch all team records from database and return as a list
+        """Fetch all team records from database table and return as a
+        list of team instances.
         """
-        sql = """
-            SELECT *
-            FROM teams
-        """
-        data = CURSOR.execute(sql).fetchall()
-        return [cls.parse_db_row(row) for row in data]
+        sql = "SELECT * FROM teams"
+        db_rows = CURSOR.execute(sql).fetchall()
+        return [cls.parse_db_row(row) for row in db_rows]
     
     @classmethod
-    def fetch_by_id(cls, id: int):
-        """Fetch the first record from the database matching the id.
+    def fetch_by_criteria(cls, col_name: str, criteria: str | int):
+        """Fetches a row from the teams table column specified in the
+        col_name argument, if it contains the value in the criteria
+        argument. Returns the team instance or none if no record
+        matched the criteria.
         """
-        sql = """
-            SELECT *
-            FROM teams
-            WHERE id = ?
-        """
-        data = CURSOR.execute(sql, (id,)).fetchone()
-        return data if data == None else cls.parse_db_row(data)
-    
-    @classmethod
-    def fetch_by_name(cls, name: str):
-        """Fetch the first record from the database matching the
-        team name.
-        """
-        sql = """
-            SELECT *
-            FROM teams
-            WHERE name = ?
-        """
-        data = CURSOR.execute(sql, (name,)).fetchone()
-        return cls.parse_db_row(data) or None
+        db_row = Utility.fetch_db_row("teams", {col_name: criteria})
+        if db_row:
+            return cls.parse_db_row(db_row)
+        return None
     
     def members(self):
         """Return a list of all members of the team instance or
@@ -194,7 +181,7 @@ class Team():
     
     def has_member(self, member_id):
         """Return boolean True/False depending on whether the member_id
-        passed as an argument is assigned to the team
+        passed as an argument is assigned to the team.
         """
         return any(
             getattr(item, "member_id", None) == member_id 
@@ -217,4 +204,10 @@ class Team():
             
     def isFull(self):
         """Indicates that a team membership has met its member cap"""
-        return True if len(self.members()) >= self.member_cap else False
+        return len(self.members()) >= self.member_cap
+    
+    @classmethod
+    def exists(cls, team_id):
+        return any(
+            [team.id for team in cls.fetch_all() if team.id == team_id]
+        )
