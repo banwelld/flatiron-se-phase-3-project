@@ -1,6 +1,13 @@
 from __init__ import CURSOR, CONN
+from table_defs import TABLE_DEFS
 from models.team import Team
-from utility import Utility
+from utility import (
+    check_date_format,
+    check_date_value,
+    check_within_limits,
+    check_characters,
+    query_gen
+)
 
 """
 TODO: Change the error message for numbers in range
@@ -16,6 +23,9 @@ class Member():
     
     all = {}
     
+    table_def = "member_table"
+    member_cap = 5
+    
     def __init__(
         self, 
         first_name: str,
@@ -27,8 +37,8 @@ class Member():
 
         # Validate birth_date format and month/day combination
         
-        Utility.check_date_format(birth_date)
-        Utility.check_valid_date(birth_date)
+        check_date_format(birth_date)
+        check_date_value(birth_date)
         
         self.first_name = first_name
         self.last_name = last_name
@@ -46,8 +56,8 @@ class Member():
     @first_name.setter
     def first_name(self, first_name):
         length = len(first_name)
-        Utility.check_in_range(length, 2, 20)
-        Utility.check_valid_chars(first_name, r"[^a-zA-Z '.\-]")
+        check_within_limits(length, 2, 20)
+        check_characters(first_name, r"[^a-zA-Z '.\-]")
         self._first_name = first_name
 
     @property
@@ -57,8 +67,8 @@ class Member():
     @last_name.setter
     def last_name(self, last_name):
         length = len(last_name)
-        Utility.check_in_range(length, 2, 30)
-        Utility.check_valid_chars(last_name, r"[^a-zA-Z '.\-]")
+        check_within_limits(length, 2, 30)
+        check_characters(last_name, r"[^a-zA-Z '.\-]")
         self._last_name = last_name
         
     @property
@@ -78,74 +88,52 @@ class Member():
                 raise OverflowError(
                     f"Team with ID '{team_id}' has reached its member limit.")           
         self._team_id = team_id
+        
+    def _attrib_names(self):
+        return [key.lstrip("_") for key in vars(self).keys()].remove("id")
+    
+    def _attrib_vals(self):
+        return [val for val in vars(self).values()].remove(self.id)
     
     @classmethod
-    def create_member_tbl(cls):
-        members_cols = {
-            "id": "INTEGER PRIMARY KEY",
-            "first_name": "TEXT",
-            "last_name": "TEXT",
-            "birth_date": "TEXT",
-            "team_id": "INTEGER",
-            "FOREIGN KEY": "{team_id} REFERENCES teams(id)"
-        }
-        cls.create_table(members_cols)
-    
-    @classmethod    
-    def create_table(columns: dict[int]):
-        col_list = [
-            f"{column}: {attribute}" for column, attribute
-            in columns.items()
-        ]
-        col_str = ", ".join(col_list)
-        
-        sql = f"CREATE TABLE IF NOT EXISTS members ({col_str})"
-
+    def create_table(cls):
+        sql = query_gen("create", cls.table_def)
         CURSOR.execute(sql)
         CONN.commit()
         
     @classmethod
     def drop_table(cls):
-        """Drop the database table where member data is persisted.
-        """
-        sql = """
-            DROP TABLE IF EXISTS members
-        """
+        sql = query_gen("drop", cls.table_def)
         CURSOR.execute(sql)
         CONN.commit()
         
     def save(self):
-        """Adds member instance record to the members table in the
-        database and assigns the record's primary key value as the
-        member instance's id. Then adds the instance to Member.all.
-        """
-        sql = """
-            INSERT INTO members (first_name, last_name, birth_date, team_id)
-            VALUES (?, ?, ?, ?)
-        """
-        CURSOR.execute(sql, (
-            self.first_name, self.last_name, self.birth_date, self.team_id))
+        sql = query_gen(
+            "insert",
+            Member.table_def, 
+            assignment_cols=self._attrib_names()
+        )
+        CURSOR.execute(sql, tuple(self._attrib_vals))
         CONN.commit()
         
-        self._id = CURSOR.lastrowid
+        self.id = CURSOR.lastrowid
         type(self).all[self.id] = self
     
     def update(self):
-        """Persist updates to member data to the member's record in the
-        database.
-        """
-        sql = """
-            UPDATE members
-            SET first_name = ?, last_name = ?, birth_date = ?, team_id = ?
-            WHERE id = ?
-        """
-        CURSOR.execute(sql, (
+        sql = query_gen(
+            "update", 
+            Member.table_def,
+            ["id"], 
+            ["first_name", "last_name", "birth_date", "team_id"]
+        )
+        CURSOR.execute(
+            sql, (
             self.first_name, 
             self.last_name, 
             self.birth_date, 
-            self.team_id, 
-            self.id))
-        
+            self.team_id,
+            self.id
+        ))
         CONN.commit()
         
     @classmethod
@@ -156,20 +144,13 @@ class Member():
         birth_date: str, 
         team_id: int | None = None
     ):
-        """Initialize a member object and save the member data to the database.
-        """
-        cls.create_table()  # only if not table exists
+        cls.create_table()
         member = Member(first_name, last_name, birth_date, team_id)
         member.save()
         return member
     
     def delete(self):
-        """Expunge member record from database and from Member.all
-        """
-        sql = """
-            DELETE FROM members
-            WHERE id = ?
-        """
+        sql = query_gen("delete", self.table_def)
         CURSOR.execute(sql, (self.id,),)
         CONN.commit()
                 
@@ -184,7 +165,8 @@ class Member():
             member.first_name = record[1]
             member.last_name = record[2]
             member._birth_date = record[3]
-            member.team_id = record[4] if record[4] else None
+            member.team_id = record[4]
+
         else:
             member = Member(record[1], record[2], record[3], record[4])
             member.id = record[0]
@@ -193,27 +175,18 @@ class Member():
     
     @classmethod
     def fetch_all(cls):
-        """Fetch all member records from database and return as a list
-        """
-        sql = """
-            SELECT *
-            FROM members
-        """
+        sql = query_gen("select", cls.table_def)
         data = CURSOR.execute(sql).fetchall()
-                
         return [cls.parse_db_row(row) for row in data]
     
     def fetch_by_criteria(cls, col_name: str, criteria: str | int):
-        """Fetches a row from the teams table column specified in the
-        col_name argument, if it contains the value in the criteria
-        argument. Returns the team instance or none if no record
-        matched the criteria.
-        """
-        db_row = Utility.fetch_db_row("teams", {col_name: criteria})
+        sql = query_gen("select", cls.table_def, [col_name])
+        db_row = CURSOR.execute(sql, (criteria,)).fetchone()
+        
         if db_row:
             return cls.parse_db_row(db_row)
         return None
-    
+
     def leave_current_team(self):
         """Assigns team_id attribute of None to the member instance. If
         the team instance to which the member instance was assigned has
@@ -224,16 +197,18 @@ class Member():
         Raises Exception if the member instance has team_id attribute
         equal to None.
         """
-        if self.team_id is not None:
-            my_team = Team.fetch_by_id(self.team_id)
-            if self.id == my_team.captain_id:
-                my_team.vacate_captain()
-            self.team_id = None
-            self.update()
-        else:
+        if not self.team_id:
             raise Exception(
-                f"Member '{self.id}' has no team_id attribute")
+                f"Member '{self.id}' has no team_id value")
             
+        my_team = Team.fetch_by_criteria("team_id", self.team_id)
+        
+        if self.id == my_team.captain_id:
+            my_team.vacate_captain()
+            
+        self.team_id = None
+        self.update()
+
     def join_team(self, team_id: int):
         """Assigns the specified team_id attribute value to the member
         instance. If the member instance already has a valid team_id
@@ -245,7 +220,7 @@ class Member():
         """
         if self.team_id is not None:
             if not Team.exists(team_id):
-                raise ValueError(f"'{team_id}' invalid team ID")
+                raise ValueError(f"'{team_id}' invalid team_id")
             
             if self.team_id == team_id:
                 raise Exception(
@@ -256,12 +231,8 @@ class Member():
         self.team_id = team_id
         self.update()
             
-    
     @classmethod
     def list_free_agents(cls):
-        """Returns a list of member instances with team_id attributes
-        having a value of None
-        """
         return [
             member for member in cls.fetch_all()
             if member.team_id == None]
