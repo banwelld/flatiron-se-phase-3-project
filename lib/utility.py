@@ -11,13 +11,13 @@ def check_is_integer(*args):
         raise TypeError(
             "All range validation arguments must be integers.")
 
-def check_within_limits(cls, check_val: int, lower_lim: int, upper_lim: int):
+def check_within_limits(check_val: int, lower_lim: int, upper_lim: int):
     """Validates that the argument check_val lies within the range of the
     upper_lim and lower_lim arguments.
     
     ValueError if check_val is not within that range.
     """
-    cls.check_is_integer(check_val, lower_lim, upper_lim)
+    check_is_integer(check_val, lower_lim, upper_lim)
     if not lower_lim <= check_val <= upper_lim:
         raise ValueError(
             f"Check value '{check_val}' is invalid, expected integer "
@@ -53,24 +53,24 @@ def check_date_value(check_val: str):
         raise ValueError(
             f"Date '{check_val}' invalid, check month/day combination")
 
-# constructor
+# query constructor
     
 def query_gen(
     operation: str,
     table_def: str,
-    condition_cols: list[str] = "",
-    assignment_cols: list[str] = ""
+    condition_cols: list[str] = [],
+    assignment_cols: list[str] = []
 ):
     """
     Returns SQL generated according to the supplied arguments
-    and table schemas dictated by the TABLE_DEFS dictionary.
+    and table schemas dictated by the PS dictionary.
     
     Arguments:
         'operation': the sql verb, in lowercase, representing the
         type of query to be produced.
         
         'table_def': the name of the table definition found in the
-        TABLE_DEFS dictionary, which will be used in the creation
+        PS dictionary, which will be used in the creation
         of the query.
         
         'condition_cols': a list of all column names for which the
@@ -89,7 +89,7 @@ def query_gen(
     
     Operations:
         'create': creates a new database table based on the table
-        definitions in the TABLE_DEFS.
+        definitions in the PS.
         
         'drop': deletes an existing table.
         
@@ -107,17 +107,9 @@ def query_gen(
         the specified table.
     """
     
-    # import and destructure table_def values to validate arguments
-    
-    from table_defs import TABLE_DEFS
-    
-    if not table_def in TABLE_DEFS.keys():
-        raise ValueError(
-            f"Invalid table definion '{table_def}'. Table definitions "
-            "must be in the first-level keys in the TABLE_DEFS dict."
-        )
-    
-    table_name, columns, f_keys = TABLE_DEFS[table_def].values()
+    # destructure table_def values to validate arguments
+
+    table_name, columns, f_keys = table_def.values()
         
     valid_ops = ["create", "drop", "select", "insert", "update", "delete"]
     
@@ -126,15 +118,15 @@ def query_gen(
             f"Invalid operation '{operation}', expected one of "
             f"{", ".join(valid_ops)}."
         )
-    
+
     for item in condition_cols + assignment_cols:
         if item not in columns.keys():
             raise ValueError(
                 f"Invalid column '{item}'. Column names must be in the "
-                "TABLE_DEFS columns dictionary for the specified table"
+                "PS columns dictionary for the specified table"
     )
     
-    if (operation == "insert" or "update") and not assignment_cols:
+    if operation in ("insert", "update") and assignment_cols is None:
         raise ValueError(
             "The assignment_cols argument is empty. Must have at least "
             f"one item to perform '{operation}' operation."
@@ -157,16 +149,16 @@ def query_gen(
         return f"DROP TABLE IF EXISTS {table_name}"
     
     if operation == "select":
-        return f"SELECT * FROM {table_name}" + where_clause
+        return f"SELECT * FROM {table_name}" + where_clause()
         
     if operation == "delete":
-        return f"DELETE FROM {table_name}" + where_clause
+        return f"DELETE FROM {table_name}" + where_clause()
     
     if operation == "update":
         param_list = [f"{col_name} = ?" for col_name in assignment_cols]
         params = ", ".join(param_list)
         return (
-            f"UPDATE {table_name} SET {params}" + where_clause)
+            f"UPDATE {table_name} SET {params}" + where_clause())
 
     if operation == "insert":
         col_count = len(assignment_cols)
