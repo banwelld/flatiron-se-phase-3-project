@@ -1,16 +1,21 @@
-from __init__ import CURSOR, CONN
-from lib.program_settings import PROGRAM_SETTINGS
+from program_settings import PROGRAM_SETTINGS as PS
 from utility import (
-    check_within_limits,
-    check_characters,
-    query_gen    
+    check_within_limits as limits,
+    check_characters as chars,
+    create_table,
+    drop_table,
+    write_data,
+    delete_row,
+    select_rows
 )
+
+# TODO: finish Team.members()
 
 class Team():
     
     all = {}
     
-    _table_def = PROGRAM_SETTINGS["Team"]["table_def"]
+    _table_def = PS["Team"]["table_def"]
         
     def __init__(
         self,
@@ -32,8 +37,8 @@ class Team():
     @name.setter
     def name(self, name):
         length = len(name)
-        check_within_limits(length, 4, 30)
-        check_characters(name, r"[^a-zA-Z '.\-]")
+        limits(length, 4, 30)
+        chars(name, r"[^a-zA-Z '.\-]")
         self._name = name
     
     @property
@@ -42,71 +47,58 @@ class Team():
     
     @captain_id.setter
     def captain_id(self, captain_id):
-        if self.captain_id is not None:
-            raise PermissionError(
-                "Cannot overwrite captain assignment. Please remove current "
-                "captain before assigning a new one."
-            )
-        if (hasattr(self, "id") and 
-            self.id is not None and 
-            captain_id is not None
-        ):
-            members = [member.id for member in self.members()]
-            if captain_id not in members:
-                raise ValueError(
-                    f"ID '{captain_id}' does not belong to a current team "
-                    "member"
+        if captain_id is not None:
+            
+            if self.captain_id:
+                
+                if self.captain_id == captain_id:
+                    raise Exception(
+                        "Specified member is already the team's captain.")
+                
+                raise PermissionError(
+                    "Cannot overwrite captain assignment. Please remove current "
+                    "captain before assigning a new one."
                 )
+                
         self._captain_id = captain_id
     
     @classmethod
-    def create_table(cls):
-        sql = query_gen("create", cls._table_def)
-        CURSOR.execute(sql)
-        CONN.commit()
+    def build_table(cls):
+        create_table(cls._table_def)
         
     @classmethod
-    def drop_table(cls):
-        sql = query_gen("drop", cls._table_def)
-        CURSOR.execute(sql)
-        CONN.commit()
+    def delete_table(cls):
+        drop_table(cls._table_def)
         
     def save(self):
-        sql = query_gen(
-            "insert", 
-            Team._table_def, 
-            assignment_cols=["name", "captain_id"]
+        new_team_id = write_data(
+            Team._table_def,
+            name=self.name,
+            captain_id=self.captain_id
         )
-        CURSOR.execute(sql, (self.name, self.captain_id))
-        CONN.commit()
         
-        self.id = CURSOR.lastrowid
+        self.id = new_team_id
         type(self).all[self.id] = self
     
     def update(self):
-        sql = query_gen(
-            "update", 
-            Team._table_def, 
-            ["id"], 
-            ["name", "captain_id"]
+        write_data(
+            Team._table_def,
+            self.id,
+            name=self.name,
+            captain_id=self.captain_id
         )
-        CURSOR.execute(sql, (self.name, self.captain_id, self.id))
-        CONN.commit()
         
     @classmethod
     def create(cls, name: str):
+        cls.build_table
         team = cls(name)
         team.save()
         return team
     
     def delete(self):
-        sql = query_gen("delete", Team._table_def, ["id"])
-        CURSOR.execute(sql, (self.id,),)
-        CONN.commit()
-        
-        for member in self.members():
-            self.remove_member(member.id)
-                
+        for mem in self.members():
+            mem.leave_current_team()
+        delete_row(Team._table_def, self.id)
         del type(self).all[self.id]
         self.id = None
         
@@ -125,48 +117,31 @@ class Team():
         return team
     
     @classmethod
-    def fetch_all(cls):
-        sql = query_gen("select", cls._table_def)
-        db_rows = CURSOR.execute(sql).fetchall()
-        return [cls.parse_db_row(row) for row in db_rows]
-    
-    @classmethod
-    def fetch_by_criteria(cls, col_name: str, criteria: str | int):
-        sql = query_gen("select", cls._table_def, [col_name])
-        db_row = CURSOR.execute(sql, (criteria,)).fetchone()
-        if db_row:
-            return cls.parse_db_row(db_row)
-        return None
+    def fetch_rows(cls, **params):
+        """
+        Fetches all matching records from the 'teams' table, filtered
+        based the 'params' keyword arguments, if any. Returns a list of
+        all matching team instances or empty list if none found.
+        """
+        db_data = select_rows(cls._table_def, **params)
+        teams = [cls.parse_db_row(row) for row in db_data]
+        return teams
     
     def members(self):
         from models.member import Member
-        sql = query_gen("select", Member._table_def, ["team_id"])
-        db_rows = CURSOR.execute(sql, (self.id,),).fetchall()
-        return [Member.parse_db_row(row) for row in db_rows]
+        return Member.fetch_rows(team_id=self.id)
     
     def has_member(self, member_id):
-        return any(
-            getattr(item, "member_id", None) == member_id 
-            for item in self.members().values()
-        )
+        return any(member.id == member_id for member in self.members())
     
-    def assign_captain(self, member_id):
-        if self.captain_id == member_id:
-            raise Exception(
-                f"Member '{member_id}' is already the team's captain")
-        
+    def install_captain(self, member_id):
         if not self.has_member(member_id):
             raise ValueError(
                 f"Member '{member_id}' is not assigned to team '{self.id}'")
-        
         self.captain_id = member_id
         self.update()
     
-    def vacate_captain(self):
+    def dump_captain(self):
         if self.captain_id:
             self.captain_id = None
             self.update()
-    
-    @classmethod
-    def exists(cls, id):
-        return cls.fetch_by_criteria("id", id) is not None

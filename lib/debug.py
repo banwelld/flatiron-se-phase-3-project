@@ -4,10 +4,10 @@ from models.member import Member
 from models.team import Team
 import ipdb
 
-Member.drop_table()
-Team.drop_table()
-Member.create_table()
-Team.create_table()
+Member.delete_table()
+Team.delete_table()
+Member.build_table()
+Team.build_table()
 
 Member.create("Andrew", "Smith", "1992/05/06")
 Member.create("Brandie", "Jones", "1991/11/09")

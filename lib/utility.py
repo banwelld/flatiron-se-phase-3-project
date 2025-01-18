@@ -1,3 +1,4 @@
+from __init__ import CURSOR, CONN
 from datetime import datetime
 import re
 
@@ -53,118 +54,71 @@ def check_date_value(check_val: str):
         raise ValueError(
             f"Date '{check_val}' invalid, check month/day combination")
 
-# query constructor
-    
-def query_gen(
-    operation: str,
-    table_def: str,
-    condition_cols: list[str] = [],
-    assignment_cols: list[str] = []
-):
-    """
-    Returns SQL generated according to the supplied arguments
-    and table schemas dictated by the PS dictionary.
-    
-    Arguments:
-        'operation': the sql verb, in lowercase, representing the
-        type of query to be produced.
-        
-        'table_def': the name of the table definition found in the
-        PS dictionary, which will be used in the creation
-        of the query.
-        
-        'condition_cols': a list of all column names for which the
-        query has conditions.
-        
-        'assignment_cols': a list of all column names for which the
-        query has data to assign within the specified table.
-        
-        The table_def, all operations, and all column names are
-        validated at the start of code execution. For 'insert' and
-        'update' operations, assignment_cols is validated for
-        truthiness. Execution will halt on ValueError if any value
-        is not valid for the table specified in the table_def
-        argument or if assignment_cols is falsey when operation is
-        equal to 'insert' or 'update'.
-    
-    Operations:
-        'create': creates a new database table based on the table
-        definitions in the PS.
-        
-        'drop': deletes an existing table.
-        
-        'select': fetches all rows from the specified table,
-        whether or not where conditions are supplied.
-        
-        'insert': adds a row to the specified table using the set
-        conditions to supply the data.
-        
-        'update': changes one or more fields in the specified table
-        for the row specified in the where conditions and values
-        specified by the set conditions.
-        
-        'delete': deletes a row, based on the where conditions for
-        the specified table.
-    """
-    
-    # destructure table_def values to validate arguments
-
-    table_name, columns, f_keys = table_def.values()
-        
-    valid_ops = ["create", "drop", "select", "insert", "update", "delete"]
-    
-    if not operation in valid_ops:
-        raise ValueError(
-            f"Invalid operation '{operation}', expected one of "
-            f"{", ".join(valid_ops)}."
-        )
-
-    for item in condition_cols + assignment_cols:
-        if item not in columns.keys():
+def check_col_names(table_def, column_list):
+    for column in column_list:
+        if column not in table_def["columns"].keys():
             raise ValueError(
-                f"Invalid column '{item}'. Column names must be in the "
-                "PS columns dictionary for the specified table"
-    )
-    
-    if operation in ("insert", "update") and assignment_cols is None:
-        raise ValueError(
-            "The assignment_cols argument is empty. Must have at least "
-            f"one item to perform '{operation}' operation."
-        ) 
-            
-    # SQL construction
+                f"'{column}' in criteria does not match any column name in "
+                f"the '{table_def["name"]}' table schema."
+            )
 
-    def where_clause():
-        if not condition_cols:
-            return ""
-        conditions = [f"{col_name} = ?" for col_name in condition_cols]
-        return f" WHERE {" AND ".join(conditions)}"
-    
-    if operation == "create":
-        col_clauses = [f"{key} {value}" for key, value in columns.items()]
-        col_schema = ", ".join(col_clauses + f_keys)
-        return f"CREATE TABLE IF NOT EXISTS {table_name} ({col_schema})"
-    
-    if operation == "drop":
-        return f"DROP TABLE IF EXISTS {table_name}"
-    
-    if operation == "select":
-        return f"SELECT * FROM {table_name}" + where_clause()
-        
-    if operation == "delete":
-        return f"DELETE FROM {table_name}" + where_clause()
-    
-    if operation == "update":
-        param_list = [f"{col_name} = ?" for col_name in assignment_cols]
-        params = ", ".join(param_list)
-        return (
-            f"UPDATE {table_name} SET {params}" + where_clause())
+# database interaction
 
-    if operation == "insert":
-        col_count = len(assignment_cols)
-        columns = ", ".join(assignment_cols)
-        wildcards = ", ".join(["?"] * col_count)
-        return (
-            f"INSERT INTO {table_name} ({columns}) "
-            f"VALUES ({wildcards})"
+def create_table(table_def):
+    columns = table_def["columns"]
+    f_keys = table_def["f_keys"]
+    
+    col_clauses = [f"{key} {value}" for key, value in columns.items()]
+    col_schema = ", ".join(col_clauses + f_keys)
+    
+    query = f"CREATE TABLE IF NOT EXISTS {table_def["name"]} ({col_schema})"
+    CURSOR.execute(query)
+    CONN.commit()
+    
+def drop_table(table_def):
+    query = f"DROP TABLE IF EXISTS {table_def["name"]}"
+    CURSOR.execute(query)
+    CONN.commit()
+
+def select_rows(table_def, **criteria):
+    where_clause = ""
+    col_names = criteria.keys()
+    col_params = tuple(criteria.values())
+    
+    if criteria:
+        check_col_names(table_def, col_names)
+        where_clause = (
+            f" WHERE " +
+            " and ".join([f"{name} = ?" for name in col_names])
         )
+        
+    query = f"SELECT * FROM {table_def["name"]}" + where_clause
+    return CURSOR.execute(query, col_params).fetchall()
+
+def delete_row(table_def, id):
+    query = f"DELETE FROM {table_def["name"]} WHERE id = {id}"
+    CURSOR.execute(query)
+    CONN.commit()
+
+def write_data(table_def, id=None, **criteria):
+    col_names = criteria.keys()
+    col_values = tuple(criteria.values())
+
+    check_col_names(table_def, col_names)
+    
+    if id:
+        assignments = [f"{name} = ?" for name in col_names]
+        assign_string = " and ".join(assignments)
+        query = f"UPDATE {table_def["name"]} SET {assign_string} WHERE id = {id}"
+    else:
+        col_string = ", ".join(col_names)
+        wild_string = ", ".join(["?"] * len(col_names))
+        query = (
+            f"INSERT INTO {table_def["name"]} ({col_string}) "
+            f"VALUES ({wild_string})"
+        )
+    
+    CURSOR.execute(query, col_values)
+    CONN.commit()
+    
+    return None if id else CURSOR.lastrowid

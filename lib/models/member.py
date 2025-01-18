@@ -1,23 +1,22 @@
 from __init__ import CURSOR, CONN
-from lib.program_settings import PROGRAM_SETTINGS as PS
-from models.team import Team
+from program_settings import PROGRAM_SETTINGS as PS
 from utility import (
-    check_date_format,
-    check_date_value,
-    check_within_limits,
-    check_characters,
-    query_gen
+    check_date_format as form_check,
+    check_date_value as val_check,
+    check_within_limits as lim_check,
+    check_characters as char_check,
+    create_table,
+    drop_table,
+    write_data,
+    delete_row,
+    select_rows
 )
 
-"""
-TODO: Recursion Error when testing list_free_agents()
-
-"""
 class Member():
     
     all = {}
     
-    _table_def = PROGRAM_SETTINGS["Member"]["table_def"]
+    _table_def = PS["Member"]["table_def"]
     
     def __init__(
         self, 
@@ -30,8 +29,8 @@ class Member():
 
         # Validate birth_date format and month/day combination
         
-        check_date_format(birth_date)
-        check_date_value(birth_date)
+        form_check(birth_date)
+        val_check(birth_date)
         
         self.first_name = first_name
         self.last_name = last_name
@@ -48,8 +47,8 @@ class Member():
     
     @first_name.setter
     def first_name(self, first_name):
-        check_within_limits(len(first_name), 2, 20)
-        check_characters(first_name, r"[^a-zA-Z '.\-]")
+        lim_check(len(first_name), 2, 20)
+        char_check(first_name, r"[^a-zA-Z '.\-]")
         self._first_name = first_name
 
     @property
@@ -58,8 +57,8 @@ class Member():
     
     @last_name.setter
     def last_name(self, last_name):
-        check_within_limits(len(last_name), 2, 30)
-        check_characters(last_name, r"[^a-zA-Z '.\-]")
+        lim_check(len(last_name), 2, 30)
+        char_check(last_name, r"[^a-zA-Z '.\-]")
         self._last_name = last_name
         
     @property
@@ -72,85 +71,52 @@ class Member():
     
     @team_id.setter
     def team_id(self, team_id):
-        if (hasattr(self, "id") and
-            team_id is not None and
-            self.team_id is not None
-        ):
-            raise PermissionError(
-                f"Cannot overwrite team assignment. Please vacate member's "
-                "current team_id before assigning a new one."
-            )
-        team_size = len(Member.fetch_by_criteria("team_id", team_id))
-        if team_size >= PS["Team"]["member_limit"]:
-            raise OverflowError("Team is at capacity.")
-       
+        if team_id is not None:                
+            member_count = len(Member.fetch_rows(team_id=team_id))
+            if member_count >= PS["Team"]["member_limit"]:
+                raise OverflowError(
+                    "Team is at capacity. Cannot accept new members")
         self._team_id = team_id
     
     @classmethod
-    def create_table(cls):
-        sql = query_gen("create", cls._table_def)
-        CURSOR.execute(sql)
-        CONN.commit()
+    def build_table(cls):
+        create_table(cls._table_def)
         
     @classmethod
-    def drop_table(cls):
-        sql = query_gen("drop", cls._table_def)
-        CURSOR.execute(sql)
-        CONN.commit()
+    def delete_table(cls):
+        drop_table(cls._table_def)
         
     def save(self):
-        sql = query_gen(
-            "insert",
+        new_member_id = write_data(
             Member._table_def, 
-            assignment_cols=[
-                "first_name", "last_name", "birth_date", "team_id"]
+            first_name=self.first_name,
+            last_name=self.last_name,
+            birth_date=self.birth_date,
+            team_id=self.team_id
         )
-        CURSOR.execute(sql, (
-            self.first_name, 
-            self.last_name, 
-            self.birth_date, 
-            self.team_id
-        ))
-        CONN.commit()
         
-        self.id = CURSOR.lastrowid
+        self.id = new_member_id
         type(self).all[self.id] = self
     
     def update(self):
-        sql = query_gen(
-            "update", 
+        write_data(
             Member._table_def,
-            ["id"], 
-            ["first_name", "last_name", "birth_date", "team_id"]
+            self.id,
+            first_name=self.first_name,
+            last_name=self.last_name,
+            birth_date=self.birth_date,
+            team_id=self.team_id
         )
-        CURSOR.execute(
-            sql, (
-            self.first_name, 
-            self.last_name, 
-            self.birth_date, 
-            self.team_id,
-            self.id
-        ))
-        CONN.commit()
         
     @classmethod
-    def create(
-        cls,
-        first_name: str, 
-        last_name: str, 
-        birth_date: str, 
-        team_id: int | None = None
-    ):
-        cls.create_table()
-        member = Member(first_name, last_name, birth_date, team_id)
+    def create(cls, first_name: str, last_name: str, birth_date: str):
+        cls.build_table()
+        member = Member(first_name, last_name, birth_date)
         member.save()
         return member
     
     def delete(self):
-        sql = query_gen("delete", Member._table_def, ["id"])
-        CURSOR.execute(sql, (self.id,),)
-        CONN.commit()
-                
+        delete_row(Member._table_def, self.id)
         del type(self).all[self.id]
         self.id = None
         
@@ -170,37 +136,37 @@ class Member():
         return member
     
     @classmethod
-    def fetch_all(cls):
-        sql = query_gen("select", cls._table_def)
-        db_rows = CURSOR.execute(sql).fetchall()
-        return [cls.parse_db_row(row) for row in db_rows]
-    
-    @classmethod
-    def fetch_by_criteria(cls, col_name: str, criteria: str | int):
-        sql = query_gen("select", cls._table_def, [col_name])
-        db_row = CURSOR.execute(sql, (criteria,)).fetchone()
-        if db_row:
-            return cls.parse_db_row(db_row)
-        return None
+    def fetch_rows(cls, **params):
+        """
+        Fetches all matching records from the 'members' table, filtered
+        based on 'params' keyword arguments, if any. Returns a list of
+        all matching member instances or empty list if none found.
+        """
+
+        db_data = select_rows(cls._table_def, **params)
+        members = [cls.parse_db_row(row) for row in db_data]
+        return members
 
     def leave_current_team(self):
-        """Assigns team_id attribute of None to the member instance. If
-        the team instance to which the member instance was assigned has
-        a captain_id attribute equal to the member inetance's id,
-        invokes the vacate_captain() method on the team instance.
-        Updates the database record after all changes made.
+        """
+        Assigns team_id attribute of None to the member instance. If the
+        team instance to which the member instance was assigned has a
+        captain_id attribute equal to the member inetance's id, invokes
+        the dump_captain() method on the team instance. Updates the
+        database record after all changes made.
         
-        Raises Exception if the member instance has team_id attribute
+        Raises ValueError if the member instance has team_id attribute
         equal to None.
         """
-        if not self.team_id:
+        from models.team import Team
+        
+        if self.team_id is None:
             raise ValueError(
                 f"Member '{self.id}' has no team_id value")
             
-        my_team = Team.fetch_by_criteria("id", self.team_id)
-        
-        if self.id == my_team.captain_id:
-            my_team.vacate_captain()
+        my_team = Team.fetch_rows(id=self.team_id).pop()
+        if my_team.captain_id == self.id:
+            my_team.dump_captain()
             
         self.team_id = None
         self.update()
@@ -208,12 +174,22 @@ class Member():
     def join_team(self, team_id: int):
         """Assigns the specified team_id attribute value to the member
         instance.
+        
+        Raises ValueError if the member already belongs to the team or
+        PermissionError if the member belongs to another team already.
         """
+        if self.team_id is not None:
+            
+            if self.team_id == team_id:
+                raise ValueError(
+                    "Member already assigned to the designated team.")
+            
+            raise PermissionError(
+                "Members cannot belong to more than one team.")
+            
         self.team_id = team_id
         self.update()
             
     @classmethod
     def free_agents(cls):
-        return [
-            member for member in cls.fetch_all()
-            if member.team_id == None]
+        return cls.fetch_rows(team_id=None)
