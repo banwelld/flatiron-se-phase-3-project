@@ -6,10 +6,10 @@ PROGRAM_SETTINGS = {
             "columns" : {
                 "id": "INTEGER PRIMARY KEY",
                 "name": "TEXT",
-                "captain_id": "INTEGER"
+                "captain": "INTEGER"
             },
             "f_keys": [
-                "FOREIGN KEY (captain_id) REFERENCES members(id)"
+                "FOREIGN KEY (captain) REFERENCES members(id)"
             ]
         }
     },
@@ -21,10 +21,10 @@ PROGRAM_SETTINGS = {
                 "first_name": "TEXT",
                 "last_name": "TEXT",
                 "birth_date": "TEXT",
-                "team_id": "INTEGER"
+                "team": "INTEGER"
             },
-            "f_keys": [
-                "FOREIGN KEY (team_id) REFERENCES teams(id)"
+            "foreign_keys": [
+                "FOREIGN KEY (team) REFERENCES teams(id)"
             ]
         },
     }

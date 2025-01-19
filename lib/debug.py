@@ -29,6 +29,9 @@ Member.create("Patty", "Myers", "1997/03/03")
 Team.create("The Aristocrats")
 Team.create("Catch Me If You Can")
 Team.create("The Dropouts")
-Team.create("Down the Rabbit Hole")
+t4 = Team.create("Down the Rabbit Hole")
+
+mem17 = Member.create("Dave", "Banwell", "1975/05/28")
+mem17.join_team(t4)
 
 ipdb.set_trace()

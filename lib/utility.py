@@ -4,121 +4,196 @@ import re
 
 # validation
 
-def check_is_integer(*args):
-    """Takes in any number of arguments and validates that they are all
-    integers.
+def ensure_integers(*args):
+    """
+    Validates that all supplied arguments are integers.
     """
     if not all(isinstance(arg, int) for arg in args):
-        raise TypeError(
-            "All range validation arguments must be integers.")
+        raise TypeError("All supplied values must be integers.")
 
-def check_within_limits(check_val: int, lower_lim: int, upper_lim: int):
-    """Validates that the argument check_val lies within the range of the
-    upper_lim and lower_lim arguments.
-    
-    ValueError if check_val is not within that range.
+def enforce_range(check_val: int, lower_lim: int, upper_lim: int):
     """
-    check_is_integer(check_val, lower_lim, upper_lim)
+    Validates that check_val lies within the inclusive range from
+    lower_lim to upper_lim.
+
+    Ensures that check_val is an integer. lower_lim and upper_lim are
+    assumed to be hard-coded integers and are not validated.
+    """
+    ensure_integers(check_val)
+
     if not lower_lim <= check_val <= upper_lim:
         raise ValueError(
-            f"Check value '{check_val}' is invalid, expected integer "
-            f"between {lower_lim} and {upper_lim}")
+            f"'{check_val}' is out of range. Expected an integer between "
+            f"{lower_lim} and {upper_lim}."
+        )
 
-def check_characters(check_val, regex: str):
-    """Validates whether any part of the check_val argument matches
-    the regex argument and throws value error if true."""
+def prevent_invalid_chars(check_val, regex: str):
+    """
+    Validates that check_val does not contain any characters that match
+    the supplied regex pattern
+    """
     if invalid_char := re.search(regex, check_val):
         raise ValueError(
-            f"'{check_val}' contains invalid character "
-            f"'{invalid_char.group()}', only letters, periods, hyphens, "
+            f"'{check_val}' contains an invalid character: "
+            f"'{invalid_char.group()}'. Only letters, periods, hyphens, and"
             f"apostrophes are allowed"
         )
 
-def check_date_format(check_val: str):
-    """Validates that the supplied date string is formatted like
-    'YYYY/MM/DD' and throws a value error if not."""
-    valid_date = re.match(r"^[0-9]{4}(/[0-9]{2}){2}$", check_val)
+def enforce_date_format(check_val: str):
+    """
+    Ensures that check_val has valid date format (YYYY/MM/DD), with
+    only digits 0 - 9 allowed in the year, month, day positions.
+    """
+    date_pattern = r"^[0-9]{4}(/[0-9]{2}){2}$"
+    valid_date = re.match(date_pattern, check_val)
     if not valid_date:
         raise ValueError(
-            f"'{check_val}' format invalid, expected 'YYYY/MM/DD'")
+            f"'{check_val}' format invalid. expected 'YYYY/MM/DD' formatting"
+            "with digits 0 - 9 in the Y, M, and D positions")
 
-def check_date_value(check_val: str):
-    """Separates the check_val string into month, date, and time for
-    strings formatted like 'YYYY/MM/DD' and tries to turn it into a
-    date using the date() method of timedate. If this generates a
-    value error, a custom error message is passed.
-    """        
+def validate_date(check_val: str):
+    """
+    Ensures that check_val has valid date formatting (YYYY/MM/DD) and then
+    ensures that the date has a valid date value by attempting to apply the
+    striptime() method of the datetime class.
+    """
+    enforce_date_format(check_val)
+    
     try:
         datetime.strptime(check_val, "%Y/%m/%d")
     except ValueError:
         raise ValueError(
             f"Date '{check_val}' invalid, check month/day combination")
-
-def check_col_names(table_def, column_list):
-    for column in column_list:
+        
+def ensure_valid_columns(table_def: dict, columns: list):
+    for column in columns:
         if column not in table_def["columns"].keys():
             raise ValueError(
-                f"'{column}' in criteria does not match any column name in "
-                f"the '{table_def["name"]}' table schema."
+                f"'{column}' does not match any column name in the"
+                f"'{table_def["name"]}' table schema."
             )
 
 # database interaction
 
-def create_table(table_def):
-    columns = table_def["columns"]
-    f_keys = table_def["f_keys"]
+def create_table(table_def: dict):
+    """
+    Assembles and executes an SQL query that creates a table from data in the
+    provided table definition and commits it to the connected database.
+    """
+    columns = [
+        f"{name} {datatype}" for name, datatype in table_def["columns"].items()
+    ]
+    foreign_keys = table_def.get("foreign_keys", [])
+    col_schema = ", ".join(columns + foreign_keys)
     
-    col_clauses = [f"{key} {value}" for key, value in columns.items()]
-    col_schema = ", ".join(col_clauses + f_keys)
-    
-    query = f"CREATE TABLE IF NOT EXISTS {table_def["name"]} ({col_schema})"
+    query = f"CREATE TABLE IF NOT EXISTS {table_def['name']} ({col_schema})"
     CURSOR.execute(query)
     CONN.commit()
     
-def drop_table(table_def):
+def drop_table(table_def: dict):
+    """
+    Assembles and executes an SQL query that drops the table specified in the 
+    provided table definition and commits the change to the connected database.
+    """
     query = f"DROP TABLE IF EXISTS {table_def["name"]}"
     CURSOR.execute(query)
     CONN.commit()
 
-def select_rows(table_def, **criteria):
-    where_clause = ""
-    col_names = criteria.keys()
-    col_params = tuple(criteria.values())
-    
-    if criteria:
-        check_col_names(table_def, col_names)
-        where_clause = (
-            f" WHERE " +
-            " and ".join([f"{name} = ?" for name in col_names])
-        )
+def select_rows(table_def: dict, **criteria: str):
+    """
+    Assembles and executes an SQL query that fetches all rows from the table
+    specified in the provided table definition that match the provided
+    criteria, if any, returning a list of all matching rows or an empty list
+    if no rows matched.
+    """
+    conditions = []
+    params = []
+
+    for col, val in criteria.items():
+        if val is None:
+            conditions.append(f"{col} IS NULL")
+        else:
+            conditions.append(f"{col} = ?")
+            params.append(val)
+
+    where_clause = f" WHERE {' AND '.join(conditions)}" if conditions else ""
+    query = (
+        f"SELECT * "
+        f"FROM {table_def['name']}"
+        f"{where_clause}"
+    )
+    return CURSOR.execute(query, tuple(params)).fetchall()
+
+def count_rows(table_def: dict, **criteria: str):
+    """
+    Assembles and executes an SQL query that counts all rows from the table
+    specified in the provided table definition that match the provided
+    criteria, if any. Filtering and grouping are applied to all provided
+    criteria. Returns an integer representing the number of matching rows.
+    """
+    conditions = []
+    params = []
         
-    query = f"SELECT * FROM {table_def["name"]}" + where_clause
-    return CURSOR.execute(query, col_params).fetchall()
+    for col, val in criteria.items():
+        if val is None:
+            conditions.append(f"{col} IS NULL")
+        else:
+            conditions.append(f"{col} = ?")
+            params.append(val)
+    
+    group_clause = (f" GROUP BY {', '.join(params)}" if params else "")
+    where_clause = (
+        f" WHERE {' AND '.join(conditions)}" if conditions else "")
+    query = (
+        f"SELECT COUNT(*) "
+        f"FROM {table_def['name']}"
+        f"{where_clause}"
+        f"{group_clause}"
+    )
+    result = CURSOR.execute(query, params).fetchone()
+    return result[0] if result else 0
 
 def delete_row(table_def, id):
-    query = f"DELETE FROM {table_def["name"]} WHERE id = {id}"
+    """
+    Assembles and executes an SQL query that deletes the table specified in the
+    provided table definition and commits the change to the connected database.
+    """
+    query = (
+        f"DELETE FROM {table_def["name"]} "
+        f"WHERE id = {id}"
+    )
     CURSOR.execute(query)
     CONN.commit()
 
-def write_data(table_def, id=None, **criteria):
-    col_names = criteria.keys()
-    col_values = tuple(criteria.values())
-
-    check_col_names(table_def, col_names)
-    
-    if id:
-        assignments = [f"{name} = ?" for name in col_names]
-        assign_string = " and ".join(assignments)
-        query = f"UPDATE {table_def["name"]} SET {assign_string} WHERE id = {id}"
-    else:
-        col_string = ", ".join(col_names)
-        wild_string = ", ".join(["?"] * len(col_names))
-        query = (
-            f"INSERT INTO {table_def["name"]} ({col_string}) "
-            f"VALUES ({wild_string})"
-        )
-    
-    CURSOR.execute(query, col_values)
+def insert_row(table_def: dict, **criteria: str):
+    """
+    Assembles and executes an SQL query that inserts data, from the provided
+    key/value criteria, into the table specified in the provided table
+    definition and commits the change to the conected database.
+    """
+    columns = ", ".join(criteria.keys())
+    wildcards = ", ".join(["?"] * len(criteria.keys()))
+    query = (
+        f"INSERT INTO {table_def["name"]} ({columns}) "
+        f"VALUES ({wildcards})"
+    )
+    CURSOR.execute(query, tuple(criteria.values()))
     CONN.commit()
+    return CURSOR.lastrowid
+
+def update_row(table_def: dict, id: int = None, **updates: str):
+    """
+    Assembles and executes an SQL query that updates the data for a row in the
+    table specified in the provided table definition and commits the change to
+    the connected database. The query filters the table for a row matching the
+    provided ID number and updates the fields in the columns matching the keys
+    in the keyword criteria.
+    """    
+    assignment_string = ", ".join([f"{col} = ?" for col in updates.keys()])
+    query = (
+        f"UPDATE {table_def["name"]} "
+        f"SET {assignment_string} "
+        f"WHERE id = {id}")
     
-    return None if id else CURSOR.lastrowid
+    CURSOR.execute(query, tuple(updates.values()))
+    CONN.commit()

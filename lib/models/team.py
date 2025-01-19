@@ -9,8 +9,6 @@ from utility import (
     select_rows
 )
 
-# TODO: finish Team.members()
-
 class Team():
     
     all = {}
@@ -20,11 +18,11 @@ class Team():
     def __init__(
         self,
         name: str,
-        captain_id: int | None = None,
+        captain: object = None,
         id: int | None = None
     ):
         self.name = name
-        self.captain_id = captain_id
+        self.captain = captain
         self.id = id
                 
     def __str__(self):
@@ -42,25 +40,12 @@ class Team():
         self._name = name
     
     @property
-    def captain_id(self):
-        return self._captain_id
+    def captain(self):
+        return self._captain
     
-    @captain_id.setter
-    def captain_id(self, captain_id):
-        if captain_id is not None:
-            
-            if self.captain_id:
-                
-                if self.captain_id == captain_id:
-                    raise Exception(
-                        "Specified member is already the team's captain.")
-                
-                raise PermissionError(
-                    "Cannot overwrite captain assignment. Please remove current "
-                    "captain before assigning a new one."
-                )
-                
-        self._captain_id = captain_id
+    @captain.setter
+    def captain(self, captain):
+        self._captain = captain
     
     @classmethod
     def build_table(cls):
@@ -74,7 +59,7 @@ class Team():
         new_team_id = write_data(
             Team._table_def,
             name=self.name,
-            captain_id=self.captain_id
+            captain=self.captain
         )
         
         self.id = new_team_id
@@ -85,7 +70,7 @@ class Team():
             Team._table_def,
             self.id,
             name=self.name,
-            captain_id=self.captain_id
+            captain=self.captain
         )
         
     @classmethod
@@ -104,14 +89,17 @@ class Team():
         
     @classmethod
     def parse_db_row(cls, record: list):
-        """Reconstitute a team instance from the team's record in the
+        """
+        Reconstitute a team instance from the team's record in the
         teams table.
         """
+        from models.member import Member
+        captain_obj = Member.fetch_by_id(record[2]) if record[2] else None
         if team := cls.all.get(record[0]):
             team.name = record[1]
-            team.captain_id = record[2]
+            team.captain = captain_obj
         else:
-            team = cls(record[1], record[2])
+            team = cls(record[1], captain_obj)
             team.id = record[0]
             cls.all[team.id] = team
         return team
@@ -127,21 +115,33 @@ class Team():
         teams = [cls.parse_db_row(row) for row in db_data]
         return teams
     
+    @classmethod
+    def fetch_by_id(cls, id: int):
+        result = cls.fetch_rows(id=id)[0]
+        return result
+    
+    @classmethod
+    def list_by_id(cls):
+        teams = cls.fetch_rows()
+        return [team.id for team in teams]
+        
     def members(self):
         from models.member import Member
-        return Member.fetch_rows(team_id=self.id)
+        return Member.fetch_rows(team=self)
     
-    def has_member(self, member_id):
-        return any(member.id == member_id for member in self.members())
+    def has_member(self, member_obj):
+        return any(member == member_obj for member in self.members())
     
-    def install_captain(self, member_id):
-        if not self.has_member(member_id):
+    def install_captain(self, member_obj):
+        if not self.has_member(member_obj):
             raise ValueError(
-                f"Member '{member_id}' is not assigned to team '{self.id}'")
-        self.captain_id = member_id
+                f"Member '{member_obj.id}' is not assigned to team "
+                f"'{self.id}'"
+            )
+        self.captain = member_obj
         self.update()
     
     def dump_captain(self):
-        if self.captain_id:
-            self.captain_id = None
+        if self.captain:
+            self.captain = None
             self.update()
