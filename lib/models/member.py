@@ -1,50 +1,57 @@
 from program_settings import PROGRAM_SETTINGS as PS
+from models.team import Team
 from utility import (
-    check_date_format as form_check,
-    check_date_value as val_check,
-    check_within_limits as lim_check,
-    check_characters as char_check,
+    enforce_range,
+    validate_chars,
+    validate_date,
     create_table,
     drop_table,
-    write_data,
+    insert_row,
+    update_row,
     delete_row,
     select_rows,
-    count_rows
+    select_by_id
 )
-
-"""
-TODO: team.setter
-TODO: testing
-"""
 
 class Member():
     
     all = {}
     
+    # table definition attribute
+    
     _table_def = PS["Member"]["table_def"]
+    
+    # instantiation assets
     
     def __init__(
         self, 
         first_name: str,
         last_name: str, 
         birth_date: str, 
-        team: object = None,
+        team_id: int | None = None,
         id: int | None = None
     ):
-
-        # Validate birth_date format and month/day combination
-        
-        form_check(birth_date)
-        val_check(birth_date)
         
         self.first_name = first_name
         self.last_name = last_name
-        self._birth_date = birth_date
-        self.team = team
+        self.birth_date = birth_date
+        self.team_id = team_id
         self.id = id
-        
+
+    def __repr__(self):
+        team_name = (
+            f"'{Team.fetch_by_id(self.team_id)}'" if self.team_id 
+            else "*FREE AGENT*"
+        )
+        return (
+            f"<{type(self).__name__.upper()}: "
+            f"first_name = '{self.first_name}', "
+            f"last_name = '{self.last_name}', "
+            f"team = {team_name}>"
+        )
+                
     def __str__(self):
-        return f"{type(self).__name__.upper()}: {self.first_name} {self.last_name}"
+        return f"{self.first_name} {self.last_name}"
         
     @property
     def first_name(self):
@@ -52,8 +59,8 @@ class Member():
     
     @first_name.setter
     def first_name(self, first_name):
-        lim_check(len(first_name), 2, 20)
-        char_check(first_name, r"[^a-zA-Z '.\-]")
+        enforce_range(len(first_name), 2, 20)
+        validate_chars(first_name, r"[^a-zA-Z '.\-]")
         self._first_name = first_name
 
     @property
@@ -62,147 +69,144 @@ class Member():
     
     @last_name.setter
     def last_name(self, last_name):
-        lim_check(len(last_name), 2, 30)
-        char_check(last_name, r"[^a-zA-Z '.\-]")
+        enforce_range(len(last_name), 2, 30)
+        validate_chars(last_name, r"[^a-zA-Z '.\-]")
         self._last_name = last_name
         
     @property
     def birth_date(self):
         return self._birth_date
     
-    @property
-    def team(self):
-        return self._team
+    @birth_date.setter
+    def birth_date(self, birth_date):
+        validate_date(birth_date)
+        self._birth_date = birth_date
     
-    @team.setter
-    def team(self, team):
-        self._team = team
+    @property
+    def team_id(self):
+        return self._team_id
+    
+    @team_id.setter
+    def team_id(self, team_id):
+        if (isinstance(team_id, int) and 
+            Team.fetch_by_id(team_id)) or team_id is None:
+            self._team_id = team_id
+        else:
+            raise ValueError("Invalid team_id value. Expected an integer "
+                             "referencing a row in the teams table.")
+        
+    # methods
     
     @classmethod
     def build_table(cls):
+        """
+        Creates a table based on the table schema in the class's
+        table_defs attribute.
+        """
         create_table(cls._table_def)
         
     @classmethod
     def delete_table(cls):
+        """
+        Deletes the table associated to the current class in its
+        table_def attribute.
+        """
         drop_table(cls._table_def)
         
     def save(self):
-        new_member_id = write_data(
+        """
+        Adds a new member's record to the members table and assigns the
+        row id to the member's id property.
+        """
+        member_id = insert_row(
             Member._table_def, 
             first_name=self.first_name,
             last_name=self.last_name,
             birth_date=self.birth_date,
-            team=None if not self.team else self.team.id
+            team_id=self.team_id
         )
-        
-        self.id = new_member_id
+        self.id = member_id
         type(self).all[self.id] = self
     
     def update(self):
-        write_data(
+        """Overwrites a member's database record with new values."""
+        update_row(
             Member._table_def,
             self.id,
             first_name=self.first_name,
             last_name=self.last_name,
             birth_date=self.birth_date,
-            team=None if not self.team else self.team.id
+            team_id=self.team_id
         )
         
     @classmethod
     def create(cls, first_name: str, last_name: str, birth_date: str):
+        """
+        Instantiates a new member with first_name, last_name, and
+        birty_day values, which are mandatory. Runs the save() method
+        on the new instance and returns it, as well. As a precaution,
+        builds the members table if none exists.
+        """
         cls.build_table()
         member = Member(first_name, last_name, birth_date)
         member.save()
         return member
     
     def delete(self):
+        """
+        Deletes member's record in in the members table and in Member.all and
+        then nullifies self.id.
+        """            
         delete_row(Member._table_def, self.id)
-        del type(self).all[self.id]
+        del Member.all[self.id]
         self.id = None
         
     @classmethod
     def parse_db_row(cls, record: list):
         """
-        Reconstitute a member instance from the member's database record.
-        """
-        from models.team import Team
-        team_obj = Team.fetch_by_id(record[4]) if record[4] else None
-        
+        Using a member record from the members table, checks if an
+        instance for the member exists in Member.all and, if so, 
+        overwrites the existing instance's properties. If no instance in
+        Member.all matches the the database record, then instantiates
+        new instance from the record's data and adds it to Member.all.
+        Returns the member instance. Imports the Team class in order to
+        assign the member's team to its team property.
+        """        
         if member := cls.all.get(record[0]):
             member.first_name = record[1]
             member.last_name = record[2]
-            member._birth_date = record[3]
-            member.team = team_obj
+            member.birth_date = record[3]
+            member.team_id = record[4]
+            
         else:
             member = Member(
                 record[1],
                 record[2],
                 record[3],
-                team_obj
+                record[4]
             )
             member.id = record[0]
             cls.all[member.id] = member
+            
         return member
     
     @classmethod
-    def fetch_rows(cls, **params):
+    def fetch_all(cls, **params):
         """
         Fetches all matching records from the 'members' table, filtered
         based on 'params' keyword arguments, if any. Returns a list of
         all matching member instances or empty list if none found.
         """
-
         db_data = select_rows(cls._table_def, **params)
         members = [cls.parse_db_row(row) for row in db_data]
         return members
     
     @classmethod
     def fetch_by_id(cls, id: int):
-        return cls.fetch_rows(id=id)[0]
-
-    def leave_current_team(self):
         """
-        Assigns team attribute of None to the member instance. If the
-        member's team's captain attribute is equal to the member, the
-        .dump_captain() method is called on the team instance, as well.
-        Updates the database record after all changes made.
-        
-        Raises ValueError if the member instance has team attribute
-        equal to None.
+        Returns the member instance of the member whose primary key
+        value matches the id argument. Returns None if no match.
         """
-        
-        if self.team is None:
-            raise ValueError(
-                f"Member '{self.id}' has null 'team' value")
-
-        if self.team.captain == self:
-            self.team.dump_captain()
-            
-        self.team = None
-        self.update()
-
-    def join_team(self, team: object):
-        """
-        Assigns the specified team to the member instance. Raises
-        ValueError if the member already belongs to the team or
-        PermissionError if the member belongs to another team already.
-        """
-        if self.team:
-            
-            if self.team == team:
-                raise ValueError(
-                    "Member already assigned to the designated team.")
-            
-            raise PermissionError(
-                "Members cannot belong to more than one team.")
-            
-        self.team = team
-        self.update()
-            
-    @classmethod
-    def free_agents(cls):
-        return cls.fetch_rows(team=None)
-    
-    @classmethod
-    def count_by_team(cls, team: object):
-        return count_rows(cls._table_def, team=team.id)
+        if db_data := select_by_id(cls._table_def, id):
+            return cls.parse_db_row(db_data)
+        return None

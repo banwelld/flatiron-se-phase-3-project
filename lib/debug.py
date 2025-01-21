@@ -32,6 +32,5 @@ Team.create("The Dropouts")
 t4 = Team.create("Down the Rabbit Hole")
 
 mem17 = Member.create("Dave", "Banwell", "1975/05/28")
-mem17.join_team(t4)
 
 ipdb.set_trace()
