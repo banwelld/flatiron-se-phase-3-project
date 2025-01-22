@@ -22,7 +22,7 @@ def validate_chars(check_val, regex: str):
     the supplied regex pattern
     """
     if invalid_char := re.search(regex, check_val):
-        raise ValueError(f"'{check_val}' contains an invalid character: "
+        raise NameError(f"'{check_val}' contains an invalid character: "
                          f"'{invalid_char.group()}'.")
 
 def enforce_date_format(check_val: str):
@@ -33,7 +33,7 @@ def enforce_date_format(check_val: str):
     date_pattern = r"^[0-9]{4}(/[0-9]{2}){2}$"
     valid_date = re.match(date_pattern, check_val)
     if not valid_date:
-        raise ValueError(
+        raise RuntimeError(
             f"'{check_val}' format invalid. Expected 'YYYY/MM/DD'.")
 
 def validate_date(check_val: str):
@@ -46,7 +46,7 @@ def validate_date(check_val: str):
     try:
         datetime.strptime(check_val, "%Y/%m/%d")
     except ValueError:
-        raise ValueError(f"Date '{check_val}' invalid.")
+        raise RuntimeError(f"Date '{check_val}' invalid.")
 
 
 # database interaction
