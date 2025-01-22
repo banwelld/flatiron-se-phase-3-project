@@ -93,9 +93,11 @@ def select_rows(table_def: dict, **criteria):
         else:
             conditions.append(f"{col} = ?")
             params.append(val)
-
+            
+    sort_clause = f"ORDER BY {
+        'last_name' if table_def["name"] == 'members' else 'name'}"
     where_clause = f" WHERE {' AND '.join(conditions)}" if conditions else ""
-    query = f"SELECT * FROM {table_def['name']}{where_clause}"
+    query = f"SELECT * FROM {table_def['name']}{where_clause} {sort_clause}"
     return CURSOR.execute(query, tuple(params)).fetchall()
 
 def select_by_id(table_def: dict, id: int):

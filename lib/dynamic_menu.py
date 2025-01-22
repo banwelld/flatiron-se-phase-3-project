@@ -18,6 +18,7 @@ def dynamic_menu(
 
     while not go_back:
         display_header(data_source["menu_title"])
+        display_member_info(member)
         display_dynamic_options(data_source)
         
         selection = get_selection()
@@ -30,6 +31,18 @@ def dynamic_menu(
 
 # display components
 
+def display_member_info(member: Member = None):
+    if member is not None:
+        print(
+            Fore.GREEN + 
+            f"MEMBER: {member.first_name} {member.last_name} | "
+            f"{member.birth_date} | {
+                "*FREE AGENT*" if member.team_id is None 
+                else Team.fetch_by_id(member.team_id)
+            }"
+        )
+        print(Fore.RESET)
+    
 def display_header(title: str):
     os.system("clear")
     title_text = f"*** {title.upper()} ***"
@@ -62,6 +75,10 @@ def display_dynamic_options(
   
 def handle_integer_input(
     option_list: list[dict[str, str]], input_val: int):
+    print("INPUT VAL: " + str(input_val))
+    for option in option_list:
+        print(option)
+    input("")
     # validate input between 1 and the length of the option list
     if 1 <= input_val <= len(option_list):
         # call the function associated with the menu item

@@ -17,6 +17,10 @@ class Member():
     
     all = {}
     
+    # single member held in state
+    
+    _current = None
+    
     # table definition attribute
     
     _table_def = PS["Member"]["table_def"]
@@ -210,3 +214,14 @@ class Member():
         if db_data := select_by_id(cls._table_def, id):
             return cls.parse_db_row(db_data)
         return None
+    
+    @classmethod
+    def set_current(cls, member=None):
+        """Sets a member instance to _current to hold it in state"""
+        cls._current = member
+        return cls._current
+    
+    @classmethod
+    def get_current(cls):
+        """Returns the current value of _current"""
+        return cls._current

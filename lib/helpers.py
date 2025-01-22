@@ -102,7 +102,7 @@ def display_item_creation(class_type: str):
     
 def seed_member_list():
     from dynamic_menu import dynamic_menu
-    from menu_schemas import member_actions
+    from menu_schemas.member_actions import member_actions
     member_select["menu_items"].clear()
     for member in Member.fetch_all():
         member_select["menu_items"].append(
