@@ -7,8 +7,8 @@ from utility import (
     insert_row,
     update_row,
     delete_row,
-    select_rows,
-    select_by_id
+    select_all_rows,
+    select_one_row
 )
 
 class Team():
@@ -22,6 +22,19 @@ class Team():
     # table definition attribute
     
     _table_def = PS["Team"]["table_def"]
+    
+    attrib_details = {
+        "name": {
+            "var_name": "name",
+            "disp_name": "team name",
+            "min_length": 4,
+            "max_length": 30,
+            "char_regex": r"[^a-zA-Z0-9 '.\-]",
+        },
+        "captain_id": {
+            "var_name": "captain_id",
+            "disp_name": "captain ID"},
+    }
     
     # instantiation assets
         
@@ -40,7 +53,7 @@ class Team():
         if captain := Member.fetch_by_id(self.captain_id):
             captain_name = f"'{captain.first_name} {captain.last_name}'"
         else:
-            captain_name = "*VACANT*"
+            captain_name = "* VACANT *"
             
         return (
             f"<{type(self).__name__.upper()}: "
@@ -49,7 +62,13 @@ class Team():
         )
                 
     def __str__(self):
-        return f"{self.name}"
+        from models.member import Member
+        if captain := Member.fetch_by_id(self.captain_id):
+            captain_name = f"{captain.first_name} {captain.last_name} team captain"
+        else:
+            captain_name = "\033[38;2;255;220;0m* VACANT *\033[0m"
+            
+        return f"{self.name} : {captain_name}"
         
     @property
     def name(self):
@@ -58,8 +77,12 @@ class Team():
     @name.setter
     def name(self, name):
         length = len(name)
-        enforce_range(length, 4, 30)
-        validate_chars(name, r"[^a-zA-Z0-9 '.\-]")
+        enforce_range(
+            length,
+            Team.attrib_details['name']['min_length'], 
+            Team.attrib_details['name']['max_length'],
+        )
+        validate_chars(name, Team.attrib_details['name']['char_regex'])
         self._name = name
     
     @property
@@ -69,13 +92,14 @@ class Team():
     @captain_id.setter
     def captain_id(self, captain_id):
         from models.member import Member
-        if (isinstance(captain_id, int) and 
-            Member.fetch_by_id(captain_id)) or captain_id is None:
+        if (
+            (isinstance(captain_id, int) and Member.fetch_by_id(captain_id))
+            or captain_id is None
+        ):    
             self._captain_id = captain_id
         else:
             raise ValueError("Invalid captain_id value. Expected an integer "
                              "referencing a row in the teams table.")
-    
     @classmethod
     def build_table(cls):
         """
@@ -104,6 +128,7 @@ class Team():
         )
         self.id = team_id
         type(self).all[self.id] = self
+        return self
     
     def update(self):
         """Overwrites a team's database record with new values."""
@@ -113,6 +138,7 @@ class Team():
             name=self.name,
             captain_id=self.captain_id
         )
+        return self
         
     @classmethod
     def create(cls, name: str):
@@ -160,20 +186,31 @@ class Team():
     def fetch_all(cls, **params):
         """
         Fetches all matching records from the 'teams' table, filtered
-        based the 'params' keyword arguments, if any. Returns a list of
-        all matching team instances or empty list if none found.
+        based on the 'params' keyword arguments, if any. Returns a list
+        of all matching team instances or empty list if none found.
         """
-        db_data = select_rows(cls._table_def, **params)
-        teams = [cls.parse_db_row(row) for row in db_data]
-        return teams
+        db_data = select_all_rows(cls._table_def, **params)
+        return [cls.parse_db_row(row) for row in db_data]
     
     @classmethod
     def fetch_by_id(cls, id: int):
         """
-        Returns the team instance of the team whose primary key value
-        matches the id argument. Returns None if no match.
+        Fetches the first matching record from the 'teams' table,
+        filtered based on the 'params' keyword arguments, if any.
+        Returns the matching team instances or None if none found. 
         """
-        if db_data := select_by_id(cls._table_def, id):
+        if db_data := select_one_row(cls._table_def, id=id):
+            return cls.parse_db_row(db_data)
+        return None
+    
+    @classmethod
+    def fetch_by_name(cls, name: str):
+        """
+        Fetches the first matching record from the 'teams' table,
+        filtered based on the 'params' keyword arguments, if any.
+        Returns the matching team instances or None if none found. 
+        """
+        if db_data := select_one_row(cls._table_def, name=name):
             return cls.parse_db_row(db_data)
         return None
     

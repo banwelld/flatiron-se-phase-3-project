@@ -2,6 +2,7 @@
 
 from models.member import Member
 from models.team import Team
+from helpers import *
 import ipdb
 
 Member.delete_table()

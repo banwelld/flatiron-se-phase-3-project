@@ -9,8 +9,8 @@ from utility import (
     insert_row,
     update_row,
     delete_row,
-    select_rows,
-    select_by_id
+    select_all_rows,
+    select_one_row
 )
 
 class Member():
@@ -24,6 +24,36 @@ class Member():
     # table definition attribute
     
     _table_def = PS["Member"]["table_def"]
+    
+    # attribute disp_namelay names
+    
+    attrib_details = {
+        "first_name":{
+            "var_name": "first_name",
+            "disp_name": "first name",
+            "min_length": 2,
+            "max_length": 20,
+            "char_regex": r"[^a-zA-Z '.\-]",
+        },
+        "last_name": {
+            "var_name": "last_name",
+            "disp_name": "last name",
+            "min_length": 2,
+            "max_length": 30,
+            "char_regex": r"[^a-zA-Z '.\-]",
+        },
+        "birth_date": {
+            "var_name": "birth_date",
+            "disp_name": "birth date",
+            "min_length": 10,
+            "max_length": 10,
+            "date_regex": r"^[0-9]{4}(/[0-9]{2}){2}$",
+        },
+        "team_id": {
+            "var_name": "team_id",
+            "disp_name": "team ID",
+        },
+    }
     
     # instantiation assets
     
@@ -45,7 +75,7 @@ class Member():
     def __repr__(self):
         team_name = (
             f"'{Team.fetch_by_id(self.team_id)}'" if self.team_id 
-            else "*FREE AGENT*"
+            else "* FREE AGENT *"
         )
         return (
             f"<{type(self).__name__.upper()}: "
@@ -55,7 +85,11 @@ class Member():
         )
                 
     def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+        team_name = (
+            f"'{Team.fetch_by_id(self.team_id)}'" if self.team_id 
+            else "\033[38;2;255;220;0m* FREE AGENT *\033[0m"
+        )
+        return f"{self.first_name} {self.last_name} : {team_name}"
         
     @property
     def first_name(self):
@@ -63,8 +97,15 @@ class Member():
     
     @first_name.setter
     def first_name(self, first_name):
-        enforce_range(len(first_name), 2, 20)
-        validate_chars(first_name, r"[^a-zA-Z '.\-]")
+        enforce_range(
+            len(first_name),
+            Member.attrib_details['first_name']['min_length'],
+            Member.attrib_details['first_name']['max_length'],
+        )
+        validate_chars(
+            first_name,
+            Member.attrib_details['first_name']['char_regex']
+        )
         self._first_name = first_name
 
     @property
@@ -73,8 +114,15 @@ class Member():
     
     @last_name.setter
     def last_name(self, last_name):
-        enforce_range(len(last_name), 2, 30)
-        validate_chars(last_name, r"[^a-zA-Z '.\-]")
+        enforce_range(
+            len(last_name),
+            Member.attrib_details['last_name']['min_length'],
+            Member.attrib_details['last_name']['max_length']
+        )
+        validate_chars(
+            last_name,
+            Member.attrib_details['last_name']['char_regex']
+        )
         self._last_name = last_name
         
     @property
@@ -83,7 +131,10 @@ class Member():
     
     @birth_date.setter
     def birth_date(self, birth_date):
-        validate_date(birth_date)
+        validate_date(
+            birth_date,
+            Member.attrib_details['birth_date']['date_regex']
+        )
         self._birth_date = birth_date
     
     @property
@@ -123,7 +174,7 @@ class Member():
         row id to the member's id property.
         """
         member_id = insert_row(
-            Member._table_def, 
+            Member._table_def,
             first_name=self.first_name,
             last_name=self.last_name,
             birth_date=self.birth_date,
@@ -184,10 +235,8 @@ class Member():
             
         else:
             member = Member(
-                record[1],
-                record[2],
-                record[3],
-                record[4]
+                record[1], record[2],
+                record[3], record[4]
             )
             member.id = record[0]
             cls.all[member.id] = member
@@ -195,15 +244,14 @@ class Member():
         return member
     
     @classmethod
-    def fetch_all(cls, **params):
+    def fetch_all(cls):
         """
         Fetches all matching records from the 'members' table, filtered
         based on 'params' keyword arguments, if any. Returns a list of
         all matching member instances or empty list if none found.
         """
-        db_data = select_rows(cls._table_def, **params)
-        members = [cls.parse_db_row(row) for row in db_data]
-        return members
+        db_data = select_all_rows(cls._table_def)
+        return [cls.parse_db_row(row) for row in db_data]
     
     @classmethod
     def fetch_by_id(cls, id: int):
@@ -211,7 +259,17 @@ class Member():
         Returns the member instance of the member whose primary key
         value matches the id argument. Returns None if no match.
         """
-        if db_data := select_by_id(cls._table_def, id):
+        if db_data := select_one_row(cls._table_def, id=id):
+            return cls.parse_db_row(db_data)
+        return None
+    
+    @classmethod
+    def fetch_by_name(cls, first: str, last: str):
+        """
+        Returns the member instance of the member whose primary key
+        value matches the id argument. Returns None if no match.
+        """
+        if db_data := select_one_row(cls._table_def, first=first, last=last):
             return cls.parse_db_row(db_data)
         return None
     

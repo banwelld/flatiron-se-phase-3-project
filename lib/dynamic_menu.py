@@ -1,108 +1,132 @@
 from models.member import Member
 from models.team import Team
-from colorama import Fore
-import os
 from helpers import (
-    inform_invalid_selection,
-    get_selection,
+    render_title,
+    render_working_with,
+    warn_invalid_selection,
+    get_input,
+    quit_program,
+    print_instr,
+    print_list,
+    print_back,
+    print_exit,
 )
 
-# dynamic menu
-
-def dynamic_menu(
-    data_source: dict, 
-    member: Member = None, 
-    team: Team = None
+# menu schema to create menus from static or dynamic lists
+    
+def menu_schema(
+    option_list: list, 
+    title: str, 
+    action: callable
 ):
-    go_back = False
+    """"
+    Generates and returns a menu schema for either static or dynamic
+    lists of menu items.
+    """
+    menu_items = option_list
+    
+    if action:
+        menu_items = [
+            {
+                "option": item, 
+                "action": action,
+                "needs_member": [True, False],
+                "needs_team": [True, False],
+            }
+            for item in option_list
+        ]
+    
+    schema = {
+        "menu_title": title,
+        "menu_items": menu_items,
+    }
+    
+    return schema
 
-    while not go_back:
-        display_header(data_source["menu_title"])
-        display_member_info(member)
-        display_dynamic_options(data_source)
+# dynamic menu interface
+
+def menu_interface(menu_schema: dict):
+    if menu_schema["menu_title"] == "Trivia League Main Menu":
+        Member.set_current(None)
+        Team.set_current(None)
+    
+    close_menu = False
+    
+    while not close_menu:
+        title = menu_schema["menu_title"]
+        options = menu_schema["menu_items"]
         
-        selection = get_selection()
+        render_title(title)
+        render_working_with()
+        render_menu_items(options)
+        render_nav_options(title)
+        
+        selection = get_input("Enter your selection :: ", True)
         
         try:
-            handle_integer_input(data_source["menu_items"],
-                                 int(selection))
+            handle_integer_input(
+                options, int(selection))
+            
         except ValueError:
-            go_back = handle_string_input(data_source, selection)
-
-# display components
-
-def display_member_info(member: Member = None):
-    if member is not None:
-        print(
-            Fore.GREEN + 
-            f"MEMBER: {member.first_name} {member.last_name} | "
-            f"{member.birth_date} | {
-                "*FREE AGENT*" if member.team_id is None 
-                else Team.fetch_by_id(member.team_id)
-            }"
-        )
-        print(Fore.RESET)
-    
-def display_header(title: str):
-    os.system("clear")
-    title_text = f"*** {title.upper()} ***"
-    print(Fore.BLUE + title_text)
-    print("=" * len(title_text))
-    print(Fore.RESET)
-
-def dynamic_menu_options(option_list: list[dict[str, str]]):
-    print(Fore.LIGHTBLACK_EX + 
-          "Please select from these options:" + Fore.RESET)
-    print(Fore.LIGHTWHITE_EX)
-    for ind, row in enumerate(option_list, start=1):
-        print(f"{ind}: {row["option"]}")
-    print(Fore.RESET)
-    
-def dynamic_nav_options(option_list: list[dict[str, str]] = []):
-    for row in option_list:
-        menu_item = f"{row["selector"].upper()}: {row["option"]}"
-        colour = (Fore.LIGHTRED_EX if row["selector"] == "x" 
-                  else Fore.LIGHTYELLOW_EX)
-
-        print(colour + menu_item + Fore.RESET)
+            print("WHY?????????????????????????????")
+            get_input("click <enter>/", 0)
+            close_menu = handle_alpha_input(
+                selection, title)
         
-def display_dynamic_options(
-    data_source: dict[str, str | list[dict[str, str]]]):
-    dynamic_menu_options(data_source["menu_items"])
-    dynamic_nav_options(data_source["nav_options"])
+def render_menu(item_list: list, title: str, action: callable = None):
+    menu_interface(menu_schema(item_list, title, action))
+        
+# menu render assets
+
+def render_menu_items(option_list: list[dict[str, any]]):
+    print_instr("Please select an option:")
+    print()
+    for ind, row in enumerate(option_list, start=1):
+        print_list(f"{ind}: {row["option"]}")
+    print()
+    
+def render_nav_options(title: str):
+    if title != "Trivia League Main Menu":
+        print_back("B: Back to Previous Menu")
+    print_exit("X: Exit the Program")
 
 # input processing
   
 def handle_integer_input(
-    option_list: list[dict[str, str]], input_val: int):
-    print("INPUT VAL: " + str(input_val))
-    for option in option_list:
-        print(option)
-    input("")
-    # validate input between 1 and the length of the option list
+    option_list: list[dict[str, any]],
+    input_val: int,
+):
+    """
+    Validates if the user's selection is one of the available options
+    and, if so, invokes the selection's action attribute (always a 
+    function). If the option is a member or team instance, adds the
+    instance to its class' respective _current attribute so that it can
+    be accessed in subsequent menus. If the user's selection is invalid,
+    informs the user.
+    """    
     if 1 <= input_val <= len(option_list):
-        # call the function associated with the menu item
-        action = option_list[input_val - 1]["action"]
-        action()
-    else:
-        inform_invalid_selection()
-
-def handle_string_input(data_source, input_val: str):
-    valid_chars = []
+        selection = option_list[input_val - 1]
+        option = selection["option"]
+        
+        if isinstance(option, Member):
+            Member.set_current(option)
+        if isinstance(option, Team):
+            Team.set_current(option)
+        
+        if selection["action"]:
+            selection["action"]()
     
-    # list all of the menu's valid string input values
-    for option in data_source["nav_options"]:
-        valid_chars.append(option["selector"])
-
-    # validate the input valus
-    if input_val.lower() in valid_chars:
-        # find the action in the option's dictionary and run it
-        [action] = [option["action"] for option in 
-                    data_source["nav_options"] if 
-                    option["selector"] == input_val.lower()] 
-        if action is not None:
-            action()
-        else:
-            return True
     else:
-        inform_invalid_selection()
+        warn_invalid_selection()
+        
+def handle_alpha_input(selection: str, title: str):
+    if selection.lower() in ("x", "q"):
+        quit_program()
+    elif selection.lower() == "b" and title != "Trivia League Main Menu":
+        return True
+    elif selection == "":
+        pass
+    else:
+        warn_invalid_selection()
+        
+    return False

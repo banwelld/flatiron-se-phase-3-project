@@ -25,24 +25,24 @@ def validate_chars(check_val, regex: str):
         raise NameError(f"'{check_val}' contains an invalid character: "
                          f"'{invalid_char.group()}'.")
 
-def enforce_date_format(check_val: str):
+def enforce_date_format(check_val: str, regex: str):
     """
     Ensures that check_val has valid date format (YYYY/MM/DD), with
     only digits 0 - 9 allowed in the year, month, day positions.
     """
-    date_pattern = r"^[0-9]{4}(/[0-9]{2}){2}$"
-    valid_date = re.match(date_pattern, check_val)
+    date_regex = regex
+    valid_date = re.match(date_regex, check_val)
     if not valid_date:
         raise RuntimeError(
             f"'{check_val}' format invalid. Expected 'YYYY/MM/DD'.")
 
-def validate_date(check_val: str):
+def validate_date(check_val: str, regex: str):
     """
     Ensures that check_val has valid date formatting (YYYY/MM/DD) and
     then ensures that the date has a valid date value by attempting to
     apply the striptime() method of the datetime class.
     """
-    enforce_date_format(check_val)
+    enforce_date_format(check_val, regex)
     try:
         datetime.strptime(check_val, "%Y/%m/%d")
     except ValueError:
@@ -73,41 +73,43 @@ def drop_table(table_def: dict):
     in the provided table definition and commits the change to the
     connected database.
     """
-    query = f"DROP TABLE IF EXISTS {table_def["name"]}"
+    query = f"DROP TABLE IF EXISTS {table_def['name']}"
     CURSOR.execute(query)
     CONN.commit()
 
-def select_rows(table_def: dict, **criteria):
+def select_all_rows(table_def: dict):
     """
     Assembles and executes an SQL query that fetches all rows from the
     table specified in the provided table definition that match the
     provided criteria, if any, returning a list of all matching rows or
     an empty listif no rows matched.
-    """
-    conditions = []
-    params = []
+    """     
+    sort_clause = (
+        f"ORDER BY {'name' if table_def['name'] == 'teams' else 'last_name'}")
+    query = f"SELECT * FROM {table_def['name']} {sort_clause}"
+    return CURSOR.execute(query).fetchall()
 
-    for col, val in criteria.items():
-        if val is None:
-            conditions.append(f"{col} IS NULL")
-        else:
-            conditions.append(f"{col} = ?")
-            params.append(val)
-            
-    sort_clause = f"ORDER BY {
-        'last_name' if table_def["name"] == 'members' else 'name'}"
-    where_clause = f" WHERE {' AND '.join(conditions)}" if conditions else ""
-    query = f"SELECT * FROM {table_def['name']}{where_clause} {sort_clause}"
-    return CURSOR.execute(query, tuple(params)).fetchall()
-
-def select_by_id(table_def: dict, id: int):
+def select_one_row(table_def: dict, **kwargs):
     """
-    Assebles and executes an SQL query that returns a record from the
-    table specified in the the table_def argument based on the id
-    argument which corresponds to the table's primary key.
+    Assebles and executes an SQL query that returns one record from the
+    table specified in the the table_def argument. Accepts 2 arguments
+    but returns results filtered for the first one with a value since
+    this query's sole purpose is to search on one criterion.
     """
-    query = f"SELECT * FROM {table_def["name"]} WHERE id = ?"
-    return CURSOR.execute(query, (id,)).fetchone()
+    if "id" in kwargs:
+        where_clause = "WHERE id = ?"
+        val = (kwargs["id"],)
+    elif "name" in kwargs:
+        where_clause = "WHERE name = ?"
+        val = (kwargs["name"],)
+    elif "first" in kwargs and "last" in kwargs:
+        where_clause = "WHERE first_name = ? AND last_name = ?"
+        val = (kwargs["first"], kwargs["last"])
+    else:
+        raise ValueError("No valid filtering criteria provided.")
+    
+    query = f"SELECT * FROM {table_def['name']} {where_clause}"
+    return CURSOR.execute(query, val).fetchone()
 
 def delete_row(table_def: dict, id: int):
     """
@@ -115,7 +117,7 @@ def delete_row(table_def: dict, id: int):
     in the provided table definition and commits the change to the
     connected database.
     """
-    query = f"DELETE FROM {table_def["name"]} WHERE id = ?"
+    query = f"DELETE FROM {table_def['name']} WHERE id = ?"
     CURSOR.execute(query, (id,))
     CONN.commit()
 
@@ -129,7 +131,7 @@ def insert_row(table_def: dict, **criteria):
     columns = ", ".join(criteria.keys())
     wildcards = ", ".join(["?"] * len(criteria.keys()))
     
-    query = f"INSERT INTO {table_def["name"]} ({columns}) VALUES ({wildcards})"
+    query = f"INSERT INTO {table_def['name']} ({columns}) VALUES ({wildcards})"
     CURSOR.execute(query, tuple(criteria.values()))
     CONN.commit()
     
@@ -150,7 +152,7 @@ def update_row(table_def: dict, id: int, **updates):
     if id is not None:
         assignment_values.append(id)
 
-    query = (f"UPDATE {table_def["name"]} "
+    query = (f"UPDATE {table_def['name']} "
              f"SET {assignment_string} {where_clause}")
     
     CURSOR.execute(query, tuple(assignment_values))
