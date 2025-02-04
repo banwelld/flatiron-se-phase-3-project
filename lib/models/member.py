@@ -1,16 +1,16 @@
 from program_settings import PROGRAM_SETTINGS as PS
-from models.team import Team
 from utility import (
     enforce_range,
     validate_chars,
-    validate_date,
+    enforce_valid_date,
     create_table,
     drop_table,
     insert_row,
     update_row,
     delete_row,
     select_all_rows,
-    select_one_row
+    select_one_row,
+    enforce_int_type,
 )
 
 class Member():
@@ -23,35 +23,54 @@ class Member():
     
     # table definition attribute
     
-    _table_def = PS["Member"]["table_def"]
+    _table_def = PS['Member']['table_def']
     
     # attribute disp_namelay names
     
     attrib_details = {
+        "id": {
+            "attrib_name": "id",
+            "disp_name": "ID",
+            "info_type": "mem_id",
+            "data_type": "integer",
+            "operations": ["id_search"],
+            },
         "first_name":{
-            "var_name": "first_name",
+            "attrib_name": "first_name",
             "disp_name": "first name",
+            "info_type": "name",
+            "data_type": "string",
             "min_length": 2,
             "max_length": 20,
             "char_regex": r"[^a-zA-Z '.\-]",
+            "operations": ["new", "name_search", "update"],
         },
         "last_name": {
-            "var_name": "last_name",
             "disp_name": "last name",
+            "attrib_name": "last_name",
+            "info_type": "name",
+            "data_type": "string",
             "min_length": 2,
             "max_length": 30,
             "char_regex": r"[^a-zA-Z '.\-]",
+            "operations": ["new", "name_search", "update"],
         },
         "birth_date": {
-            "var_name": "birth_date",
+            "attrib_name": "birth_date",
             "disp_name": "birth date",
+            "info_type": "date",
+            "data_type": "string",
             "min_length": 10,
             "max_length": 10,
             "date_regex": r"^[0-9]{4}(/[0-9]{2}){2}$",
+            "operations": ["new", "update"],
         },
         "team_id": {
-            "var_name": "team_id",
-            "disp_name": "team ID",
+            "attrib_name": "team_id",
+            "disp_name": "ID",
+            "info_type": "team_id",
+            "data_type": "integer",
+            "operations": ["update"],
         },
     }
     
@@ -62,8 +81,8 @@ class Member():
         first_name: str,
         last_name: str, 
         birth_date: str, 
-        team_id: int | None = None,
-        id: int | None = None
+        team_id: int = None,
+        id: int = None
     ):
         
         self.first_name = first_name
@@ -71,26 +90,21 @@ class Member():
         self.birth_date = birth_date
         self.team_id = team_id
         self.id = id
-
+        
     def __repr__(self):
-        team_name = (
-            f"'{Team.fetch_by_id(self.team_id)}'" if self.team_id 
-            else "* FREE AGENT *"
-        )
         return (
             f"<{type(self).__name__.upper()}: "
             f"first_name = '{self.first_name}', "
             f"last_name = '{self.last_name}', "
-            f"team = {team_name}>"
+            f"team = {self.team_name()}>"
         )
                 
     def __str__(self):
-        team_name = (
-            f"'{Team.fetch_by_id(self.team_id)}'" if self.team_id 
-            else "\033[38;2;255;220;0m* FREE AGENT *\033[0m"
-        )
-        return f"{self.first_name} {self.last_name} : {team_name}"
-        
+        from ui_rendering import list_str
+        member = list_str(f"{self._name()} : {self.birth_date} : "
+                          f"{self.team_name()}")
+        return member
+    
     @property
     def first_name(self):
         return self._first_name
@@ -131,7 +145,7 @@ class Member():
     
     @birth_date.setter
     def birth_date(self, birth_date):
-        validate_date(
+        enforce_valid_date(
             birth_date,
             Member.attrib_details['birth_date']['date_regex']
         )
@@ -143,15 +157,24 @@ class Member():
     
     @team_id.setter
     def team_id(self, team_id):
-        if (isinstance(team_id, int) and 
-            Team.fetch_by_id(team_id)) or team_id is None:
-            self._team_id = team_id
-        else:
-            raise ValueError("Invalid team_id value. Expected an integer "
-                             "referencing a row in the teams table.")
+        if team_id is not None:
+            enforce_int_type(team_id)
+        self._team_id = team_id
         
     # methods
     
+    def _name(self):
+        return f"{self.first_name} {self.last_name}"
+    
+    def team_name(self):
+        from ui_rendering import warning_str, list_str
+        from models.team import Team
+        team = next(
+            (t for t in Team.fetch_all() if t.id == self.team_id),
+            None
+        )
+        return list_str(team.name) if team else warning_str("* FREE AGENT *")
+
     @classmethod
     def build_table(cls):
         """
@@ -181,7 +204,7 @@ class Member():
             team_id=self.team_id
         )
         self.id = member_id
-        type(self).all[self.id] = self
+        Member.all[self.id] = self
     
     def update(self):
         """Overwrites a member's database record with new values."""
@@ -193,6 +216,7 @@ class Member():
             birth_date=self.birth_date,
             team_id=self.team_id
         )
+        return self
         
     @classmethod
     def create(cls, first_name: str, last_name: str, birth_date: str):
@@ -264,12 +288,16 @@ class Member():
         return None
     
     @classmethod
-    def fetch_by_name(cls, first: str, last: str):
+    def fetch_by_name(cls, first_name: str, last_name: str):
         """
         Returns the member instance of the member whose primary key
         value matches the id argument. Returns None if no match.
         """
-        if db_data := select_one_row(cls._table_def, first=first, last=last):
+        if db_data := select_one_row(
+                cls._table_def,
+                first=first_name,
+                last=last_name
+        ):
             return cls.parse_db_row(db_data)
         return None
     

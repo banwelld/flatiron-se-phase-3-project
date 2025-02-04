@@ -1,6 +1,6 @@
-from dynamic_menu import render_menu
-from new_menu_schema import menu_items
+from ui_rendering import generate_menu
+from menu_item_lists import main
 
 if __name__ == "__main__":
     
-    render_menu(menu_items, "Trivia League Main Menu")
+    generate_menu(main, "main menu")

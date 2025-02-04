@@ -1,474 +1,395 @@
 from models.member import Member
 from models.team import Team
-from program_settings import PROGRAM_SETTINGS as ps
+from ui_rendering import (
+    quit_program,
+    instruction_str,
+    prompt_str,
+    render_display_list,
+    render_input_UI,
+    render_success_message,
+    render_warning,
+    generate_menu,
+    warn_already_member,
+    warn_date_invalid,
+    warn_invalid_char,
+    warn_invalid_date_format,
+    warn_invalid_selection,
+    warn_length_invalid,
+    warn_no_such_item,
+    warn_no_team,
+)
 from datetime import datetime
-import time
 import os
 import re
 
-# print in colour
+# menu interface logic
 
-def print_title(text, sep=""):
-    print(f"\033[38;2;0;253;255m{text}\033[0m", sep=sep)
-    
-def print_instr(text, sep=""):
-    print(f"\033[38;2;160;160;160m{text}\033[0m", sep=sep)
-    
-def print_info(text, sep=""):
-    print(f"\033[38;2;102;204;0m{text}\033[0m", sep=sep)
-    
-def print_warn(text, sep=""):
-    print(f"\033[38;2;255;220;0m{text}\033[0m", sep=sep)
-    
-def print_list(text, sep=""):
-    print(f"\033[38;2;250;250;250m{text}\033[0m", sep=sep)
-    
-def print_back(text, sep=""):
-    print(f"\033[38;2;255;147;0m{text}\033[0m", sep=sep)
-    
-def print_exit(text, sep=""):
-    print(f"\033[38;2;255;70;95m{text}\033[0m", sep=sep)
-
-# exit program
-
-def quit_program():
-    os.system("clear")
-    print_title("Good Bye!!")
-    exit()
-
-# display support functions
-
-def render_title(title: str):
-    os.system("clear")
-    title_text = f"*** {title.upper()} ***"
-    print_title(title_text)
-    print_title("=" * len(title_text))
-    print()
-
-def render_current_member():
-    member = Member._current
-    if member is None:
-        return
-    
-    team = Team.fetch_by_id(member.team_id)
-    display_team = (
-        "\033[38;2;255;220;0m * FREE AGENT *\033[0m"
-        if team is None
-        else team
-    )
-    print_info(
-        f"{member.first_name} {member.last_name} : {member.birth_date} : "
-        f"{display_team}"
-    )
-        
-def render_current_team():
-    team = Team._current
-    if team is None:
-        return
-    
-    captain = Team.fetch_by_id(team.captain_id)
-    display_cpt = (
-        "\033[38;2;255;220;0m * NO CAPTAIN *\033[0m"
-        if captain is None
-        else f"({captain}, team captain)"
-    )
-    print_info(f"{team.name} : {display_cpt}")
-            
-def render_working_with():
-    if Member._current or Team._current:
-        print_instr("Operations that you select will be performed on:")
-        print()
-        render_current_member()
-        render_current_team()
-        
-def render_header(title: str):
-    os.system("cls")
-    render_title(title)
-    render_working_with()
-    
-def render_success_message(item: Member | Team):
-    print()
-    succ_col = "\033[38;2;102;204;0m"
-    reset = "\033[0m"
-    print_list(
-        f"{type(item).__name__} {item.id} : {item} : {succ_col}SUCCESS{reset}")
-    get_input("Hit <enter> to continue",True)
-    
-def get_input(prompt: str, space_above=False):
-    cr = "\n" if space_above else ""
-    text_colour = "\033[38;2;160;160;160m"
-    input_colour = "\033[38;2;250;250;250m"
-    
-    prompt_with_colour = f"{cr}{text_colour}{prompt}{input_colour}"
-    selection = input(prompt_with_colour)
-    
-    return selection
-    
-def render_menu_items(option_list: list[dict[str, any]]):
-    print_instr("Please select an option:")
-    print()
-    for ind, row in enumerate(option_list, start=1):
-        print_list(f"{ind}: {row["option"]}")
-    print()
-    
-def render_nav_options(title: str):
-    if title != "Trivia League Main Menu":
-        print_back("B: Back to Previous Menu")
-    print_exit("X: Exit the Program")
-
-def render_warning(warning_msg: str, seconds: int):
+def handle_menu_input(title: str, options: dict):
+    selection = input(instruction_str("Enter your selection: "))
+    try:
+        exit_menu = break_on_integer_input(options, int(selection))
+        if "select" in title.lower():
+            return exit_menu
+        return False
+    except ValueError:
+        exit_menu = break_on_alpha_input(selection, title)
+        if "main" not in title.lower():
+            return exit_menu
+        return False
+  
+def break_on_integer_input(option_list: list, input_val: int):
     """
-    Generates a blank screen with a warning message in red. The time
-    parameter is required so that the function can determine whether to
-    go back to the previous screen on timeout or to render a "press any
-    key" message if the user selects 0 seconds.
-    """
-    os.system("clear")
-    print_warn(warning_msg)
-    if seconds > 0:
-        time.sleep(seconds)
+    Validates if the user's selection is one of the available options
+    and, if so, invokes the selection's action attribute (always a 
+    function). If the option is a member or team instance, adds the
+    instance to its class' respective _current attribute so that it can
+    be accessed in subsequent menus. If the user's selection is invalid,
+    informs the user.
+    """    
+    if 1 <= input_val <= len(option_list):
+        option = option_list[input_val - 1]
+        
+        if isinstance(option, Member):
+            Member.set_current(option)
+        elif isinstance(option, Team):
+            Team.set_current(option)
+        elif type(option) == dict:
+            opt_action = option.get('action')
+            opt_action()
+            clear_both_current()
+            return False
+        else:
+            raise TypeError(
+                f"Option points to invalid item type. " 
+                f"Expected Member, Team, Dict, but got {type(option)}"
+            )
+        return True
     else:
-        get_input("Hit <enter> to continue", True)
+        warn_invalid_selection()
+        return False
         
-def warn_invalid_selection():
-    render_warning("Invalid selection. Please try again.", 1.75)
+def break_on_alpha_input(selection: str, title: str):
+    mem = Member.get_current()
+    team = Team.get_current()
+    if selection.lower() in ("x", "q"):
+        quit_program()
+    elif selection.lower() in ("b", "p") and "main menu" not in title.lower():
+        return True
+    elif selection.lower() == "c" and (mem is not None or team is not None):
+        clear_both_current()
+    elif selection == "":
+        pass
+    else:
+        warn_invalid_selection()
+    return False
 
-def warn_invalid_char(display_name: str, char: str):
-    message = (
-        f"Invalid {display_name}: Includes the following: {char}.\n"
-        "The only characters allowed in names are letters, period (.),\n"
-        "apostrophe ('), or hyphen (-). Also, member names must not\n"
-        "contain numerals (0 - 9)."
+# CLI operations and operation helper functions
+
+CLI_user_input_ops = {
+    "new": {
+        "disp_name": "new",
+        "action": lambda class_type, **params: class_type.create(**params),
+        "success_msg": True,
+    },
+    "update": {
+        "disp_name": "update",
+        "action": (lambda class_type, **params: 
+            full_attrib_update(class_type.get_current(), **params)),
+    },
+    "id_search": {
+        "disp_name": "find",
+        "action": (lambda class_type, **params: 
+            class_type.set_current(class_type.fetch_by_id(**params))),
+    },
+    "name_search": {
+        "disp_name": "find",
+        "action": (lambda class_type, **params: 
+            class_type.set_current(class_type.fetch_by_name(**params))),
+    },
+}
+
+CLI_membership_ops = {
+    "add_member": {
+        "prep_action": lambda: validate_add_member(),
+        "action": lambda: update_team_id(Team.get_current().id),
+    },
+    "remove_member": {
+        "prep_action": lambda: validate_remove_member(),
+        "action": lambda: update_team_id(None),
+    },
+    "add_captain": {
+        "prep_action": lambda: validate_add_captain(),
+        "action": lambda: update_captain_id(Member.get_current().id),
+    },
+    "remove_captain": {
+        "prep_action": lambda: ensure_current(Team),
+        "action": lambda: update_captain_id(None),
+    },
+    "delete_member": {
+        "prep_action": lambda: validate_remove_member(),
+        "action": lambda: delete_item(Member),
+    },
+    "delete_team": {
+        "prep_action": lambda: validate_delete_team(Team),
+        "action": lambda: delete_item(Team),
+    },
+    "display_team": {
+        "prep_action": lambda: ensure_current(Team),
+        "action": lambda: render_display_list(
+            f"{Team.get_current.name.Title()} Team Roster",
+            Team.get_current().list_members()
+        )
+    }
+}
+
+def get_user_input(class_type: type, attribute: dict):
+    prompt_text = (f"Enter {class_type.__name__.lower()}'s "
+                   f"{attribute['disp_name']}: ")
+    input_text = input(prompt_str(prompt_text))
+    return input_text
+
+def validated_input_text(operation: str, class_type: type, attribute: dict):
+    max_attempts = 5
+    disp_name = CLI_user_input_ops[operation]['disp_name']
+    for attempt in range(1, max_attempts + 1):
+        render_input_UI(disp_name, class_type)
+        input_text = get_user_input(class_type, attribute)
+        if input_is_valid(attribute, input_text):
+            return input_text
+    render_warning(
+        "You have entered 5 invalid values in a row. "
+        "Returning to main menu.",
+        1.75
     )
-    render_warning(message, 0)
+    os.system("clear")
+    return None
 
-def warn_attrib_length_invalid(
-        display_name: str, 
-        min_length: int, 
-        max_length: int
-):
-    message = (
-        f"Invalid {display_name}: Not within expected length parameters.\n"
-        f"Expected length between {min_length} and {max_length} characters."
+def full_attrib_update(item: object, **params):
+    setattr(item, *params.values())
+    return item.update()
+
+def get_attribute_params(class_type: type, attributes: dict, operation: str):
+    params = {}
+    for attribute in attributes.keys():
+        input_text = validated_input_text(
+            operation,
+            class_type,
+            attributes[attribute]
+        )
+        if input_text is None:
+            return None
+        elif operation == "update":
+            params['name'] = attributes[attribute]['attrib_name']
+            params['value'] = input_text
+        else:
+            params[attribute] = input_text
+    
+    return params
+
+def get_attributes(operation: str, class_type: type, attribute: str):
+    if attribute is not None:
+        return {attribute: class_type.attrib_details.get(attribute)}
+    else:
+        return {
+            key:val for key, val in class_type.attrib_details.items()
+            if operation in val['operations']
+        }
+
+def CLI_user_input_operation(operation: str, class_type: type, attribute: str = None):
+    if operation == "update":
+        ensure_current(class_type)
+    attributes = get_attributes(operation, class_type, attribute)
+    params = get_attribute_params(class_type, attributes, operation)
+    if params is None:
+        return None
+    result = CLI_user_input_ops[operation]['action'](class_type, **params)
+    
+    if CLI_user_input_ops[operation]['disp_name'] in ("new", "update"):
+        render_success_message(result)
+    elif CLI_user_input_ops[operation] == "id_search":
+        if result is None:
+            warn_no_such_item(class_type, attribute, attributes.get(attribute))
+            return
+    elif CLI_user_input_ops[operation] == "name_search":
+        if result is None:
+            warn_no_such_item(
+                class_type, "name", " ".join(attributes.values()).title())
+            return
+    else:
+        pass
+    
+    return result    
+
+def CLI_membership_operation(operation: str):
+    if CLI_membership_ops[operation]['prep_action']():
+        CLI_membership_ops[operation]['action']()
+
+# member/team selection
+
+def select_item_from_list(class_type: type):
+    generate_menu(class_type.fetch_all(), f"{class_type.__name__.title()} Select")
+    
+def select_team_member(member_type: str):
+    generate_menu(Team.get_current().list_members(), f"{member_type} Select")
+    
+def ensure_current(class_type: type):
+    if class_type.get_current() is None:
+        select_item_from_list(class_type)
+        
+def ensure_both_current():
+    ensure_current(Member)
+    if Member.get_current() is None:
+        return
+    ensure_current(Team)
+    
+def clear_current(class_type: type):
+    if class_type.get_current() is not None:
+        class_type.set_current(None)
+        
+def clear_both_current():
+    clear_current(Member)
+    clear_current(Team)
+    
+def update_team_id(team_id: int):
+    if Member.get_current() is not None and Team.get_current() is not None:
+        mem = Member.get_current()
+        mem.team_id = team_id
+        mem.update()
+        render_success_message(mem)
+        clear_current(Team)
+    
+def update_captain_id(cpt_id: int):
+    if Member.get_current() is not None and Team.get_current() is not None:
+        team = Team.get_current()
+        team.captain_id = cpt_id
+        team.update()
+        render_success_message(team)
+        clear_current(Member)
+    
+def delete_item(class_type: type):
+    if class_type.get_current() is not None:
+        item_name = class_type.get_current()._name
+        class_type.get_current().delete()
+        render_warning(f"{item_name} successfully deleted from application.", 0)
+    
+# user input and operation validation
+
+def name_is_valid(attribute: dict, check_val: str):
+    return (
+        string_length_ok(attribute, check_val)
+        and string_chars_ok(attribute, check_val)
     )
-    render_warning(message, 0)
-
-def warn_invalid_date_format(display_name: str):
-    message = (
-        f"Invalid {display_name}: improper format.\n"
-        "Expected date format is 'YYYY/MM/DD'."
+    
+def date_is_valid(attribute: dict, check_val: str):
+    return (
+        date_format_ok(attribute, check_val)
+        and date_value_ok(attribute, check_val)
     )
-    render_warning(message, 0)
 
-def warn_date_invalid(display_name: str):
-    message = (
-        f"Invalid {display_name}: Date does not exist.\n"
-        "Please check that day value is appropriate for the month\n"
-        "and that the month value is between 1 and 12."
-    )
-    render_warning(message, 0)
-
-def attrib_length_valid(attribute: dict, check_val: str):
+def string_length_ok(attribute: dict, check_val: str):
     min_length = attribute.get('min_length')
     max_length = attribute.get('max_length')
-
-    if not min_length and not max_length:
-        return True
-
     result = min_length <= len(check_val) <= max_length
     if not result:
-        warn_attrib_length_invalid(attribute['disp_name'], min_length, max_length)
-
+        warn_length_invalid(attribute['disp_name'], min_length, max_length)
+        
     return result
 
-def attrib_chars_valid(attribute: dict, check_val: str):
+def string_chars_ok(attribute: dict, check_val: str):
     char_pattern = attribute.get('char_regex')
-    
-    if not char_pattern:
-        return True
-
     if invalid_char := re.search(char_pattern, check_val):
         warn_invalid_char(attribute['disp_name'], invalid_char.group())
+        return False
+    return True
 
-    return not bool(invalid_char)
-    
-def attrib_date_valid(attribute: dict, check_val: str, validate_function):
-    if not attribute.get('valid_date_regex'):
-        return True
-    return validate_function(attribute, check_val)
-
-def check_date_format(attribute: dict, check_val: str):
-    date_regex = attribute.get('valid_date_regex')
-    if result := bool(re.match(date_regex, check_val)):
-        return result
-    else:
+def date_format_ok(attribute: dict, check_val: str):
+    date_pattern = attribute.get('date_regex')
+    if not re.match(date_pattern, check_val):
         warn_invalid_date_format(attribute['disp_name'])
-        return result
+        return False
+    return True
 
-def check_date_value(attribute, check_val: str):
+def date_value_ok(attribute: dict, check_val: str):
     try:
-        return bool(datetime.strptime(check_val, "%Y/%m/%d"))
+        datetime.strptime(check_val, "%Y/%m/%d")
+        return True
     except ValueError:
         warn_date_invalid(attribute['disp_name'])
         return False
 
-def validated_user_input(attribute: dict, prompt: str):
-    while True:
-        input_val = input(prompt)
-        if (
-            attrib_length_valid(attribute, input_val)
-            and attrib_chars_valid(attribute, input_val)
-            and attrib_date_valid(attribute, input_val, check_date_format)
-            and attrib_date_valid(attribute, input_val, check_date_value)
-        ):
-            return input_val
+def input_is_valid(attribute: dict, input_text: str):
+    if attribute['info_type'] == "date":
+        validate_func = date_is_valid
+    elif attribute['info_type'] == "name":
+        validate_func = name_is_valid
+    else:
+        return True
+    return validate_func(attribute, input_text)
 
-# creating and updating members/teams
+def validate_membership():
+    if Member.get_current() is None:
+        return False
+    if Member.get_current().team_id is None:
+        warn_no_team()
+        return False
+    return True
 
-def new_instance(class_type: type):
-    params = {}
-    attributes = {}
+def validate_is_member():
+    if Member.get_current() is None or Team.get_current() is None:
+        return False
+    return Member.get_current().team_id == Team.get_current().id
     
-    for key, val in class_type.attrib_details.items():
-        if "id" not in key:
-            attributes[key] = val
-    
-    for attribute in attributes.keys():
-        prompt = (
-            f"Enter {class_type.__name__.lower()}'s "
-            f"{attributes[attribute]['disp_name']}: "
-        )
-        
-        params[attribute] = {
-            attributes[attribute]['var_name']: validated_user_input(
-                attributes[attribute],
-                prompt
-            )
-        }
-
-    return class_type.create(**params)
-
-def update_attribute(class_type: type):
-    attributes = {}
-    
-    print()
-    if class_type.__name__.lower() == "member":
-        print_instr("Hit <enter> with no text to skip any option.")
+def ensure_is_not_captain(team: type):
+    if Member.get_current().id == team.captain_id:
         print()
-    
-    for key, val in class_type.attrib_details.items():
-        if "name" in key:
-            attributes[key] = val
-    
-    for attribute in attributes:
-        prompt = (
-            f"Enter the {class_type.__name__.lower()}'s "
-            f"{attributes[attribute]['disp_name']}: "
-        )
-
-        setattr(
-            class_type._current,
-            attribute['var_name'],
-            validated_user_input(attribute, prompt)
-        )
-        
-    return class_type._current.update()
-
-def do_input_operation(input_function: callable, class_type: type):
-    title = " ".join(input_function.__name__.split("_"))
-    render_header(title)
-    print_instr("Please enter the requested information:")
-    print()
-    
-    item = input_function(class_type)
-    if not item:
-        return
-    
-    render_success_message(item)
-    
-def add_new_member():
-    do_input_operation(new_instance, Member)
-    
-def add_new_team():
-    do_input_operation(new_instance, Team)    
-    
-def update_name(obj: type, attribute: str):
-    if obj.__name__.lower == "member":
-        name = f"{Member._current.first_name} {Member._current.first_name}"
-    else:
-        name = Team._current.name
-          
-    do_input_operation(
-        update_attribute(),
-        obj,
-        attrib=attribute, 
-        prompt=(
-            f"Please enter '{name}'s' new {' '.join(attribute.split('_'))}: ")
-    )
-
-def update_member_firstname():
-    update_name(Member, "first_name")
-    
-def update_member_lastname():
-    update_name(Member, "last_name")
-    
-def update_team_name():
-    update_name(Team, "name")
-
-def membership_change(operation: str):
-    """
-    Adds or removes a member from a team or elevates member to captain
-    based on the operation parameter: "add" adds member, "remove"
-    removes member, "add_captain" adds a captain, "remove_captain"
-    removes a captain.
-    """
-    titles = {
-        "add": "Assign Member to Team",
-        "remove": "Remove Member from Team",
-        "add_captain": "Assign Captain to Team",
-        "remove_captain": "Remove Captain from Team",
-    }
-    title = titles.get(operation)
-    
-    if operation == "add_captain" and Member._current is None:
-        select_member_from_roster()
-    
-    if operation == "add" and Team._current is None:
-        select_team_from_roster()
-        
-    member = Member._current
-    team = Team._current
-
-    if operation == "remove" and member.team_id is None:
-        return render_warning(
-            f"{member} is a free agent and cannot be removed from a team.", 1.75
-        )
-    
-    if operation == "remove_captain" and team.captain_id is None:
-        return render_warning(
-            f"Cannot remove {team}'s captain because the position is vacant.", 1.75
-        )
-    
-    proceed = False
-    while not proceed:
-        print_operation = operation.replace("_", " ").title()
-        render_header(title)
-        print_warn(f"{team}: {print_operation} {member}?")
-        
-        choice = get_input("Enter 'Y' to confirm or 'N' to cancel: ", True).lower()
-        if choice not in ("y", "n"):
-            return warn_invalid_selection()
-        elif choice == "n":
-            return
-        else:
-            proceed = True
-
-    if operation in ("add", "remove"):
-        member.team_id = team.id if operation == "add" else None
-        member.update()
-    
-    if operation in ("add_captain", "remove_captain"):
-        team.captain_id = member.id if operation == "add_captain" else None
+        print("Member is captain of current teaam. Vacating team captain.")
+        print()
+        team.captain_id = None
         team.update()
-
-def assign_member_to_team():
-    select_team_from_roster()
-    if len(Member.fetch_all(team_id=Team._current.id)) >= ps.team.member_limit:
-        return render_warning(
-            "Team is at capacity. Either remove a member or try another team.",
-            1.75
-        )
-    membership_change("add")
-    
-def remove_member_from_team():
-    team = Team.fetch_by_id(Member.current.team_id)
-    if team is None:
-        return render_warning("Member is a free agent.", 1.75)
-    membership_change("remove")
-    
-def assign_captain_to_team():
-    team = Team._current
-    select_member_from_roster(team_id=team.id)
-    mem = Member._current
-    if team.captain_id == mem.id:
-        return render_warning("Member is the current team captain.", 1.75)
-    if team.captain_id is not None and team.captain_id != mem.id:
-        return render_warning(
-            "Team already has a captain. Please remove "
-            "prior to assigning a new captain.",
-            1.75
-        )
-    membership_change("add_captain")
-    
-def remove_captain_to_team():
-    member = Member.fetch_by_id(Team.current.captain_id)
-    if member is None:
-        return render_warning("Team captain position is already vacant.", 1.75)
-    membership_change("remove_captain")
-    
-# searching for members and teams
-
-def select_from_roster(obj: type, **kwargs):
-    from dynamic_menu import render_menu
-    obj_type = obj.__name__.title()
-    roster = (obj.fetch_all() if not kwargs 
-              else obj.fetch_all(**kwargs)
-              )
-    render_menu(roster, f"Select a {obj_type}")
-    
-def select_member_from_roster(**kwargs):
-    select_from_roster(Member, **kwargs)
-
-def select_team_from_roster(**kwargs):
-    select_from_roster(Team, **kwargs)
-
-def search_by_id(obj: Member | Team):
-    render_header("Search by Name")
-    obj_type = obj.__name__.lower()
-    # try:
-    id_number = int(get_input(
-        f"Enter the {obj_type}'s ID number :: ",
-        True
-    ))
-    item = obj.fetch_by_id(id_number)
-    
-    get_input(item, 0)
-    
-    if item:
-        obj.set_current(item)
-        render_success_message(item)
-    else:
-        render_warning(
-            f"{obj_type.title()} with ID {id_number} not found.", 1.75)
-    
-    # except ValueError:
-    #     render_warning("ID numbers must be integers.", 1)
         
-def search_member_by_id():
-    search_by_id(Member)
-    
-def search_team_by_id():
-    search_by_id(Team)
+def ensure_no_members():
+    for mem in Team.get_current().list_members():
+        print()
+        print("Removing all members from team.")
+        print()
+        mem.team_id = None
+        mem.update()
 
-def search_by_name(obj: type):
-    render_header("Search by Name")
-    obj_type = obj.__name__.lower()
+def validate_remove_member():
+    ensure_current(Member)
+    if Member.get_current() is None:
+        return False
+    if not validate_membership():
+        return False
+    ensure_is_not_captain(
+        Team.fetch_by_id(
+            Member.get_current().team_id
+        )
+    )
+    return True
 
-    if obj_type == "member":
-        params = {
-            "first": get_input(f"Enter the {obj_type}'s first name :: ", True),
-            "last": get_input(f"Enter the {obj_type}'s last name :: ")
-        }
-    else:
-        params = {"name": get_input(f"Enter the {obj_type}'s name :: ", True)}
-    
-    result = obj.fetch_by_name(**params)
-    
-    obj.set_current(result)
-    render_success_message(result)
-    
-def search_member_by_name():
-    search_by_name(Member)
-    
-def search_team_by_name():
-    search_by_name(Team)
+def validate_add_captain():
+    ensure_current(Team)
+    if Team.get_current() is None:
+        return False
+    select_team_member("captain")
+    return True
+
+def validate_delete_team():
+    ensure_current(Team)
+    if Team.get_current() is None:
+        return False
+    ensure_no_members()
+    return True
+
+def validate_add_member():
+    ensure_both_current()
+    if Team.get_current() is None or Member.get_current() is None:
+        clear_both_current()
+        return False
+    if validate_is_member():
+        warn_already_member()
+        return False
+    if Member.get_current().team_id is not None:
+        ensure_is_not_captain(Team.fetch_by_id(Member.get_current().team_id))
+    return True

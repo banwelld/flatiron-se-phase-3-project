@@ -8,7 +8,8 @@ from utility import (
     update_row,
     delete_row,
     select_all_rows,
-    select_one_row
+    select_one_row,
+    enforce_int_type,
 )
 
 class Team():
@@ -21,19 +22,33 @@ class Team():
     
     # table definition attribute
     
-    _table_def = PS["Team"]["table_def"]
+    _table_def = PS['Team']['table_def']
     
     attrib_details = {
+        "id": {
+            "attrib_name": "id",
+            "disp_name": "ID",
+            "info_type": "team_id",
+            "data_type": "integer",
+            "operations": ["id_search"],
+            },
         "name": {
-            "var_name": "name",
+            "attrib_name": "name",
             "disp_name": "team name",
+            "info_type": "name",
+            "data_type": "string",
             "min_length": 4,
             "max_length": 30,
             "char_regex": r"[^a-zA-Z0-9 '.\-]",
+            "operations": ["new", "name_search", "update"],
         },
         "captain_id": {
-            "var_name": "captain_id",
-            "disp_name": "captain ID"},
+            "attrib_name": "captain_id",
+            "disp_name": "captain ID",
+            "info_type": "mem_id",
+            "data_type": "integer",
+            "operations": ["assign"],
+        }
     }
     
     # instantiation assets
@@ -41,34 +56,24 @@ class Team():
     def __init__(
         self,
         name: str,
-        captain_id: int | None = None,
-        id: int | None = None
+        captain_id: int = None,
+        id: int = None
     ):
         self.name = name
         self.captain_id = captain_id
         self.id = id
 
     def __repr__(self):
-        from models.member import Member
-        if captain := Member.fetch_by_id(self.captain_id):
-            captain_name = f"'{captain.first_name} {captain.last_name}'"
-        else:
-            captain_name = "* VACANT *"
-            
         return (
             f"<{type(self).__name__.upper()}: "
             f"name = '{self.name}', "
-            f"captain = {captain_name}>"
+            f"captain = {self.captain_name()}>"
         )
                 
     def __str__(self):
-        from models.member import Member
-        if captain := Member.fetch_by_id(self.captain_id):
-            captain_name = f"{captain.first_name} {captain.last_name} team captain"
-        else:
-            captain_name = "\033[38;2;255;220;0m* VACANT *\033[0m"
-            
-        return f"{self.name} : {captain_name}"
+        from ui_rendering import list_str
+        team = list_str(f"{self.name} : {self.captain_name(True)}")
+        return team
         
     @property
     def name(self):
@@ -91,15 +96,25 @@ class Team():
     
     @captain_id.setter
     def captain_id(self, captain_id):
-        from models.member import Member
-        if (
-            (isinstance(captain_id, int) and Member.fetch_by_id(captain_id))
-            or captain_id is None
-        ):    
-            self._captain_id = captain_id
+        if captain_id is None:
+            self._captain_id = None
         else:
-            raise ValueError("Invalid captain_id value. Expected an integer "
-                             "referencing a row in the teams table.")
+            self._captain_id = enforce_int_type(captain_id)
+        
+    # methods
+    
+    def captain_name(self, include_title: bool = False):
+        from ui_rendering import list_str, warning_str
+        captain = next(
+            (m for m in self.list_members() if m.id == self.captain_id),
+            None
+        )
+        title = " (cptn)" if include_title else ""
+        return (
+            list_str(f"{captain._name()}{title}") if captain
+            else warning_str("* NO CAPTAIN *")
+        )
+
     @classmethod
     def build_table(cls):
         """
@@ -127,7 +142,7 @@ class Team():
             captain_id=self.captain_id
         )
         self.id = team_id
-        type(self).all[self.id] = self
+        Team.all[self.id] = self
         return self
     
     def update(self):
@@ -183,13 +198,13 @@ class Team():
         return team
     
     @classmethod
-    def fetch_all(cls, **params):
+    def fetch_all(cls):
         """
         Fetches all matching records from the 'teams' table, filtered
         based on the 'params' keyword arguments, if any. Returns a list
         of all matching team instances or empty list if none found.
         """
-        db_data = select_all_rows(cls._table_def, **params)
+        db_data = select_all_rows(cls._table_def)
         return [cls.parse_db_row(row) for row in db_data]
     
     @classmethod
@@ -224,3 +239,7 @@ class Team():
     def get_current(cls):
         """Returns the current value of _current"""
         return cls._current
+    
+    def list_members(self):
+        from models.member import Member
+        return [m for m in Member.fetch_all() if m.team_id == self.id]

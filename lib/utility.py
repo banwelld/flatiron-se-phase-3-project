@@ -2,16 +2,19 @@ from __init__ import CURSOR, CONN
 from datetime import datetime
 import re
 
-# validation
+# back-end validation
+
+def enforce_int_type(check_val: any):
+    try:
+        return int(check_val)
+    except TypeError:
+        raise TypeError("Invalid data type. Expected integer.")
 
 def enforce_range(check_val: int, lower_lim: int, upper_lim: int):
     """
     Validates that check_val is an integer and lies within the inclusive
     range from lower_lim to upper_lim.
     """
-    if not isinstance(check_val, int):
-        raise TypeError("Invalid data type. Expected integer.")
-
     if not lower_lim <= check_val <= upper_lim:
         raise ValueError(f"'{check_val}' is out of range. Expected between "
                          f"{lower_lim} and {upper_lim}.")
@@ -36,7 +39,7 @@ def enforce_date_format(check_val: str, regex: str):
         raise RuntimeError(
             f"'{check_val}' format invalid. Expected 'YYYY/MM/DD'.")
 
-def validate_date(check_val: str, regex: str):
+def enforce_valid_date(check_val: str, regex: str):
     """
     Ensures that check_val has valid date formatting (YYYY/MM/DD) and
     then ensures that the date has a valid date value by attempting to
@@ -48,7 +51,6 @@ def validate_date(check_val: str, regex: str):
     except ValueError:
         raise RuntimeError(f"Date '{check_val}' invalid.")
 
-
 # database interaction
 
 def create_table(table_def: dict):
@@ -58,7 +60,7 @@ def create_table(table_def: dict):
     database.
     """
     columns = [f"{name} {datatype}" for name, datatype 
-               in table_def["columns"].items()]
+               in table_def['columns'].items()]
     
     foreign_keys = table_def.get("foreign_keys", [])
     col_schema = ", ".join(columns + foreign_keys)
@@ -98,13 +100,13 @@ def select_one_row(table_def: dict, **kwargs):
     """
     if "id" in kwargs:
         where_clause = "WHERE id = ?"
-        val = (kwargs["id"],)
+        val = (kwargs['id'],)
     elif "name" in kwargs:
         where_clause = "WHERE name = ?"
-        val = (kwargs["name"],)
+        val = (kwargs['name'],)
     elif "first" in kwargs and "last" in kwargs:
         where_clause = "WHERE first_name = ? AND last_name = ?"
-        val = (kwargs["first"], kwargs["last"])
+        val = (kwargs['first'], kwargs['last'])
     else:
         raise ValueError("No valid filtering criteria provided.")
     
@@ -129,7 +131,7 @@ def insert_row(table_def: dict, **criteria):
     database.
     """
     columns = ", ".join(criteria.keys())
-    wildcards = ", ".join(["?"] * len(criteria.keys()))
+    wildcards = ", ".join(['?'] * len(criteria.keys()))
     
     query = f"INSERT INTO {table_def['name']} ({columns}) VALUES ({wildcards})"
     CURSOR.execute(query, tuple(criteria.values()))
