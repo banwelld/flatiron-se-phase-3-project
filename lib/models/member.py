@@ -1,4 +1,4 @@
-from program_settings import PROGRAM_SETTINGS as PS
+from table_defs import TABLE_DEFS
 from utility import (
     enforce_range,
     validate_chars,
@@ -23,7 +23,7 @@ class Member():
     
     # table definition attribute
     
-    _table_def = PS['Member']['table_def']
+    _table_def = TABLE_DEFS['member']
     
     # attribute disp_namelay names
     
@@ -157,8 +157,6 @@ class Member():
     
     @team_id.setter
     def team_id(self, team_id):
-        if team_id is not None:
-            enforce_int_type(team_id)
         self._team_id = team_id
         
     # methods

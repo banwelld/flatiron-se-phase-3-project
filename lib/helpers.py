@@ -17,6 +17,8 @@ from ui_rendering import (
     warn_length_invalid,
     warn_no_such_item,
     warn_no_team,
+    warn_team_full,
+    warn_no_members,
 )
 from datetime import datetime
 import os
@@ -56,7 +58,6 @@ def break_on_integer_input(option_list: list, input_val: int):
         elif type(option) == dict:
             opt_action = option.get('action')
             opt_action()
-            clear_both_current()
             return False
         else:
             raise TypeError(
@@ -108,44 +109,11 @@ CLI_user_input_ops = {
     },
 }
 
-CLI_membership_ops = {
-    "add_member": {
-        "prep_action": lambda: validate_add_member(),
-        "action": lambda: update_team_id(Team.get_current().id),
-    },
-    "remove_member": {
-        "prep_action": lambda: validate_remove_member(),
-        "action": lambda: update_team_id(None),
-    },
-    "add_captain": {
-        "prep_action": lambda: validate_add_captain(),
-        "action": lambda: update_captain_id(Member.get_current().id),
-    },
-    "remove_captain": {
-        "prep_action": lambda: ensure_current(Team),
-        "action": lambda: update_captain_id(None),
-    },
-    "delete_member": {
-        "prep_action": lambda: validate_remove_member(),
-        "action": lambda: delete_item(Member),
-    },
-    "delete_team": {
-        "prep_action": lambda: validate_delete_team(Team),
-        "action": lambda: delete_item(Team),
-    },
-    "display_team": {
-        "prep_action": lambda: ensure_current(Team),
-        "action": lambda: render_display_list(
-            f"{Team.get_current.name.Title()} Team Roster",
-            Team.get_current().list_members()
-        )
-    }
-}
-
 def get_user_input(class_type: type, attribute: dict):
     prompt_text = (f"Enter {class_type.__name__.lower()}'s "
                    f"{attribute['disp_name']}: ")
     input_text = input(prompt_str(prompt_text))
+    print("INPUT: ", input_text)
     return input_text
 
 def validated_input_text(operation: str, class_type: type, attribute: dict):
@@ -160,7 +128,7 @@ def validated_input_text(operation: str, class_type: type, attribute: dict):
         "You have entered 5 invalid values in a row. "
         "Returning to main menu.",
         1.75
-    )
+    ) 
     os.system("clear")
     return None
 
@@ -218,11 +186,7 @@ def CLI_user_input_operation(operation: str, class_type: type, attribute: str = 
     else:
         pass
     
-    return result    
-
-def CLI_membership_operation(operation: str):
-    if CLI_membership_ops[operation]['prep_action']():
-        CLI_membership_ops[operation]['action']()
+    return result
 
 # member/team selection
 
@@ -250,27 +214,78 @@ def clear_both_current():
     clear_current(Member)
     clear_current(Team)
     
-def update_team_id(team_id: int):
-    if Member.get_current() is not None and Team.get_current() is not None:
-        mem = Member.get_current()
-        mem.team_id = team_id
-        mem.update()
-        render_success_message(mem)
-        clear_current(Team)
+def update_current_member_team_id(new_value: int):
+    mem = Member.get_current()
+    mem.team_id = new_value
+    mem.update()
+    render_success_message(mem)
+    
+def assign_team_id_to_current_member():
+    if not validate_add_member():
+        return
+    update_current_member_team_id(Team.get_current().id)
+    clear_both_current()
+        
+def remove_team_id_from_current_member():
+    if not validate_remove_member():
+        return
+    update_current_member_team_id(None)
+    clear_both_current()
+    
+def update_current_team_captain_id(new_value: int):
+    team = Team.get_current()
+    team.captain_id = new_value
+    team.update()
+    render_success_message(team)
+    
+def assign_captain_id_to_current_team():
+    if not validate_add_captain():
+        return
+    update_current_team_captain_id(Member.get_current().id)
+    clear_both_current()
+    
+def reemove_captain_id_from_current_team():
+    ensure_current(Team)
+    if Team.get_current() is None:
+        return
+    update_current_team_captain_id(None)
+    clear_both_current()
+    
+def delete_current_object(class_type: type):
+    item = class_type.get_current()
+    item.delete()
+    render_warning("Item deleted successfully.", 0)
+    
+def delete_current_team():
+    if not validate_delete_team():
+        return
+    delete_current_object(Team)
+    clear_current(Team)
+    
+def delete_current_member():
+    if not validate_remove_member():
+        return
+    delete_current_object(Member)
+    clear_current(Member)
     
 def update_captain_id(cpt_id: int):
-    if Member.get_current() is not None and Team.get_current() is not None:
+    if Team.get_current() is not None:
         team = Team.get_current()
         team.captain_id = cpt_id
         team.update()
         render_success_message(team)
-        clear_current(Member)
     
 def delete_item(class_type: type):
     if class_type.get_current() is not None:
         item_name = class_type.get_current()._name
         class_type.get_current().delete()
         render_warning(f"{item_name} successfully deleted from application.", 0)
+        
+def show_active_team_roster():
+    ensure_current(Team)
+    team = Team.get_current()
+    team_name = team.name.title()
+    render_display_list(team_name, team.list_members)
     
 # user input and operation validation
 
@@ -354,6 +369,16 @@ def ensure_no_members():
         print()
         mem.team_id = None
         mem.update()
+        
+def ensure_team_has_capacity():
+    if len(Team.get_current().list_members()) >= Team._MAX_CAPACITY:
+        return False
+    return True
+
+def ensure_current_membership():
+    if not len(Team.get_current().list_members()):
+        return False
+    return True
 
 def validate_remove_member():
     ensure_current(Member)
@@ -370,6 +395,9 @@ def validate_remove_member():
 
 def validate_add_captain():
     ensure_current(Team)
+    if not ensure_current_membership():
+        warn_no_members()
+        return False
     if Team.get_current() is None:
         return False
     select_team_member("captain")
@@ -386,6 +414,9 @@ def validate_add_member():
     ensure_both_current()
     if Team.get_current() is None or Member.get_current() is None:
         clear_both_current()
+        return False
+    if not ensure_team_has_capacity():
+        warn_team_full()
         return False
     if validate_is_member():
         warn_already_member()

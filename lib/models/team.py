@@ -1,4 +1,4 @@
-from program_settings import PROGRAM_SETTINGS as PS
+from table_defs import TABLE_DEFS
 from utility import (
     enforce_range,
     validate_chars,
@@ -22,7 +22,11 @@ class Team():
     
     # table definition attribute
     
-    _table_def = PS['Team']['table_def']
+    _table_def = TABLE_DEFS['team']
+    
+    # maximum number of players per team
+    
+    _MAX_CAPACITY = 5
     
     attrib_details = {
         "id": {
@@ -34,7 +38,7 @@ class Team():
             },
         "name": {
             "attrib_name": "name",
-            "disp_name": "team name",
+            "disp_name": "name",
             "info_type": "name",
             "data_type": "string",
             "min_length": 4,
@@ -96,10 +100,7 @@ class Team():
     
     @captain_id.setter
     def captain_id(self, captain_id):
-        if captain_id is None:
-            self._captain_id = None
-        else:
-            self._captain_id = enforce_int_type(captain_id)
+        self._captain_id = captain_id
         
     # methods
     

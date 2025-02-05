@@ -222,8 +222,15 @@ def warn_no_such_item(class_type: type, search_by: str, input_text: str):
         f"{search_by} {input_text}\n\n"
     )
     
+def warn_team_full():
+    render_warning("Selected team is at capacity. Please choose "
+                   "another or remove member(s) to free up space.\n\n")
+    
 def warn_no_team():
     render_warning("Current member is a free agent.\n\n")
 
 def warn_already_member():
     render_warning("Member already belongs to the chosen team.\n\n")
+
+def warn_no_members():
+    render_warning("Team has no members. Add members to select a captain.")

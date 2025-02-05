@@ -3,7 +3,13 @@ from models.team import Team
 from ui_rendering import generate_menu, render_display_list
 from helpers import (
     CLI_user_input_operation,
-    CLI_membership_operation,
+    show_active_team_roster,
+    assign_team_id_to_current_member,
+    remove_team_id_from_current_member,
+    assign_captain_id_to_current_team,
+    reemove_captain_id_from_current_team,
+    delete_current_member,
+    delete_current_team,
 )
 
 # menu item lists
@@ -54,15 +60,15 @@ mem_actions = [
     },
     {
         "option": "Assign to Team",
-        "action": lambda: CLI_membership_operation("add_member"),
+        "action": assign_team_id_to_current_member,
     },
     {
         "option": "Remove from Team",
-        "action": lambda: CLI_membership_operation("remove_member"),
+        "action": remove_team_id_from_current_member,
     },
     {
         "option": "Delete Member",
-        "action": lambda: CLI_membership_operation("delete_member"),
+        "action": delete_current_member,
     },
 ]
 
@@ -77,15 +83,15 @@ team_actions = [
     },
     {
         "option": "Show Team Roster",
-        "action": lambda: CLI_membership_operation("display_team")
+        "action": show_active_team_roster,
     },
     {
         "option": "Assign Captain",
-        "action": lambda: CLI_membership_operation("add_captain"),
+        "action": assign_captain_id_to_current_team,
     },
     {
         "option": "Remove Captain",
-        "action": lambda: CLI_membership_operation("remove_captain"),
+        "action": reemove_captain_id_from_current_team,
     },
     {
         "option": "Update Team Name",
@@ -93,6 +99,6 @@ team_actions = [
     },
     {
         "option": "Delete Team",
-        "action": lambda: CLI_membership_operation("delete_team"),
+        "action": delete_current_team,
     },
 ]

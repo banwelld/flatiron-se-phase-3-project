@@ -3,10 +3,6 @@
 from models.member import Member
 from models.team import Team
 from helpers import *
-import ipdb
-import os
-
-os.system("clear")
 
 Member.delete_table()
 Team.delete_table()
@@ -49,4 +45,21 @@ t5 = Team.create("The Hooligans")
 m27 = Member.create("Dave", "Banwell", "1975/05/28")
 t6 = Team.create("Dave's Team")
 
-ipdb.set_trace()
+team_lists = [
+    (m1, m6, m11, m16, m21),
+    (m2, m7, m12, m17, m22),
+    (m3, m8, m13, m18, m23),
+    (m4, m9, m14, m19, m24),
+    (m5, m10, m15, m20, m25)
+]
+
+teams = [t1, t2, t3, t4, t5]
+
+for i in range(5):
+    for mem in team_lists[i]:
+        mem.team_id = teams[i].id
+        mem.update()
+
+for i in range(5):
+    teams[i].captain_id = team_lists[i][2].id
+    teams[i].update()
