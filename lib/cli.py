@@ -1,6 +1,7 @@
-from ui_rendering import generate_menu
-from menu_item_lists import main
+import util.helpers as util
 
 if __name__ == "__main__":
-    
-    generate_menu(main, "main menu")
+
+    while util.menu_reset["operation"] is False:
+        util.perform_operation("select_operation")
+        util.clear_selected_values()
