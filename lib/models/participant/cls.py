@@ -146,7 +146,7 @@ class Participant:
         """
         Returns the team name associated with the participant.
         """
-        from models.team.model import Team
+        from models.team.cls import Team
 
         if self.team_id is None:
             return None

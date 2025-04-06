@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from models.participant.model import Participant
-from models.team.model import Team
+from models.participant.cls import Participant
+from models.team.cls import Team
 
 Participant.delete_table()
 Team.delete_table()

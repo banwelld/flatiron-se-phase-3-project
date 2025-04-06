@@ -115,7 +115,7 @@ class Team:
         Lists all the participants having the team's id as their team_id
         property.
         """
-        from models.participant.model import Participant
+        from models.participant.cls import Participant
 
         print(self.id)
         return [

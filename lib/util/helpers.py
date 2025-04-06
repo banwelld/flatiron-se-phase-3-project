@@ -1,9 +1,10 @@
 import os
 from typing import Union
-from models.team.model import Team
-from models.participant.model import Participant
+from models.team.cls import Team
+from models.participant.cls import Participant
 from models.team.config import config as team_config
 from models.participant.config import config as participant_config
+from classes.session_state.cls import SessionState
 from util.validation.warnings import (
     warn_invalid_selection,
     render_success_message,

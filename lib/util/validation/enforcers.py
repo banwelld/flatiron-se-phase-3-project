@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Dict, Union
-from models.participant.model import Participant
-from models.team.model import Team
+from models.participant.cls import Participant
+from models.team.cls import Team
 import re
 
 
