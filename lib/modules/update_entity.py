@@ -35,6 +35,8 @@ def update_entity(entity: Union[Participant, Team], attr_name: str) -> None:
         new_value = get_attr_value(model_type, attr_config, display_text)
 
         if not get_confirmation(f"Update {model_type} {display_text} to {new_value}?"):
+            from cli import selected_entities
+            selected_entities.reset()
             return USER_CANCEL
 
         update_attr_and_persist(entity, attr_name, new_value)

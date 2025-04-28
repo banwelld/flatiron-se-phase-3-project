@@ -130,7 +130,6 @@ def parse_db_row(model: type, record: list):
 
 # utility functions for parse_db_row
 
-
 def get_repository(model, record):
     from util.helpers import find_entity_in_list
     from models.participant import Participant

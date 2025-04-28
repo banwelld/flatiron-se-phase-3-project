@@ -5,7 +5,6 @@ from modules.user_sentinels import USER_CANCEL
 from modules.warnings import warn_team_full
 from util.helpers import generate_disp_name
 from validation.enforcers import ensure_team_not_full
-from strings.user_messages import YN_PROMPT
 
 
 # team assignment functions
@@ -21,16 +20,20 @@ def assign_to_team(
     if the user chooses to cancel. If the participant is moving from another team, it removes them
     from that team. The append_participant method persists the change to the database.
     """
+    from cli import selected_entities
+
     if do_confirm:
         confirmation_prompt = (
             f"Move {generate_disp_name(participant)} "
             f"to {generate_disp_name(destination_team)}?"
         )
         if not get_confirmation(confirmation_prompt):
+            selected_entities.reset()
             return USER_CANCEL
         
     if not destination_team.is_free_agents:
         if ensure_team_not_full(destination_team) is False:
+            selected_entities.reset()
             return warn_team_full()
 
     if source_team:

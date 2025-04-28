@@ -93,7 +93,8 @@ class Team:
         of all Team instances or empty list if none found.
         """
         db_data = select_all_rows(TABLE_CONFIG)
-        return [parse_db_row(cls, row) for row in db_data]
+        result = [parse_db_row(cls, row) for row in db_data]
+        return result
 
 
     # instance methods

@@ -22,6 +22,8 @@ def delete_entity(entity: Union[Participant, Team], destination_team: Team = Non
     all participants from the team and makes them free agents.
     """
     if not get_confirmation(f"Delete the selected {get_model_type(entity)}?"):
+        from cli import selected_entities
+        selected_entities.reset()
         return USER_CANCEL
 
     if isinstance(entity, Participant):

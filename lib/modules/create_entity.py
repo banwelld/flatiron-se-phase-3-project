@@ -59,12 +59,14 @@ def create_entity(model: Union[Participant, Team]) -> Union[Participant, Team]:
     confirmation process or hits CRTL + C returns the escape sentinel to cancel the
     operation immediately.
     """
+    from cli import selected_entities
     try:
         model_type = model.__name__.lower()
         attr_values = collect_instantiation_data(model, model_type)
         entity_name = get_entity_name(model, attr_values)
 
         if not get_confirmation(f"Create {model_type}: {entity_name}?"):
+            selected_entities.reset()
             return USER_CANCEL
 
         return model.create(**attr_values)

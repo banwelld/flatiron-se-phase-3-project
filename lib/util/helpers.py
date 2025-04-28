@@ -3,13 +3,17 @@ from typing import Union
 from models.participant import Participant
 from models.team import Team
 from modules.get_config import OPS_CONFIG
-from modules.user_sentinels import USER_CANCEL, USER_CLEAR
+from modules.user_sentinels import (
+    USER_CANCEL,
+    USER_CLEAR,
+)
 from strings.tint_string import tint_string
 from strings.user_messages import (
     HIT_ENTER,
     APP_TITLE,
     NONE_SELECTED,
     CANCEL_INSTRUCTION,
+    OP_CANCELLED,
 )
 
 
@@ -150,12 +154,14 @@ def render_result_screen(entity_name: str, operation: str):
     Clears the console and displays a standardized success message for a specified
     entity and action and prompts the user to continue.
     """
-    message = generate_success_msg(entity_name, operation) if isinstance(entity_name, str) else OP_CANCELLED
+    if isinstance(entity_name, str):
+        message = generate_success_msg(entity_name, operation)
+    else:
+        message = OP_CANCELLED
 
     clear_cli()
 
     print(message)
-    print()
     print()
     input(tint_string("plain", HIT_ENTER))
 

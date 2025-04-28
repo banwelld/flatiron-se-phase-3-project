@@ -43,6 +43,7 @@ FREE_AGENT_TEAM = next((t for t in Team.all if t.is_free_agents), None)
 # session state
 
 selected_entities = SessionState(**{key: None for key in MODEL_TYPES})
+
 participants_loaded = SessionState(**{str(team.id): False for team in Team.all})
 
 

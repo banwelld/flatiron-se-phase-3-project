@@ -8,7 +8,6 @@ from util.helpers import (
     clear_cli
 )
 from modules.warnings import warn_invalid_selection
-from strings.tint_string import tint_string
 from strings.user_messages import YN_PROMPT
 
 # ui rendering
