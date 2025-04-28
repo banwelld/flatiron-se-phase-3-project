@@ -1,0 +1,26 @@
+{
+    "operation": {
+        "menu_depth": 1,
+        "option_type": "operation",
+        "display": {
+            "title": "Operation Selection",
+            "screen_prompt": "What would you like to do? "
+        }
+    },
+    "team": {
+        "menu_depth": 2,
+        "option_type": "model",
+        "display": {
+            "title": "Team Selection",
+            "screen_prompt": "Select a team: "
+        }
+    },
+    "participant": {
+        "menu_depth": 2,
+        "option_type": "model",
+        "display": {
+            "title": "Participant Selection",
+            "screen_prompt": "Select a Participant: "
+        }
+    }
+}

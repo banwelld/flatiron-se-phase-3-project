@@ -1,0 +1,9 @@
+{
+    "table_name": "teams",
+    "columns": {
+        "id": "INTEGER PRIMARY KEY",
+        "name": "TEXT",
+        "is_free_agents": "BOOLEAN"
+    },
+    "foreign_keys": []
+}

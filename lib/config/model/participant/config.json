@@ -1,0 +1,41 @@
+{
+    "id": {
+        "display_text": "ID",
+        "required": false,
+        "user_editable": false,
+        "validation": {}
+    },
+    "first_name": {
+        "display_text": "first name",
+        "required": true,
+        "user_editable": true,
+        "validation": {
+            "validate_as": "name",
+            "min_length": 2,
+            "max_length": 20,
+            "regex": "[a-zA-Z '.\\-]"
+        }
+    },
+    "last_name": {
+        "display_text": "last name",
+        "required": true,
+        "user_editable": true,
+        "validation": {
+            "validate_as": "name",
+            "min_length": 2,
+            "max_length": 30,
+            "regex": "[a-zA-Z '.\\-]"
+        }
+    },
+    "birth_date": {
+        "display_text": "birth date",
+        "required": true,
+        "user_editable": false,
+        "validation": {
+            "validate_as": "date",
+            "min_length": null,
+            "max_length": null,
+            "regex": "^[0-9]{4}(-[0-9]{2}){2}$"
+        }
+    }
+}
