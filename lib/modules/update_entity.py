@@ -13,6 +13,7 @@ from modules.user_sentinels import USER_CANCEL
 
 # utility functions
 
+
 def update_attr_and_persist(
     entity: Union[Participant, Team], attr_name: str, new_value: str
 ):
@@ -25,6 +26,7 @@ def update_attr_and_persist(
 
 # runner function
 
+
 def update_entity(entity: Union[Participant, Team], attr_name: str) -> None:
     try:
         model = type(entity)
@@ -36,6 +38,7 @@ def update_entity(entity: Union[Participant, Team], attr_name: str) -> None:
 
         if not get_confirmation(f"Update {model_type} {display_text} to {new_value}?"):
             from cli import selected_entities
+
             selected_entities.reset()
             return USER_CANCEL
 

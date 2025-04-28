@@ -16,16 +16,14 @@ from modules.get_config import (
     MENU_OPS_CONFIG,
     OPS_CONFIG,
 )
-from modules.user_sentinels import (
-    is_cancelled,
-    is_cleared,
-)
+from modules.user_sentinels import is_cancelled
 from util.helpers import (
     render_result_screen,
     generate_disp_name,
     render_header,
 )
 from strings.user_messages import NONE_SELECTED
+
 
 # load all teams
 
@@ -35,10 +33,7 @@ Team.fetch_all()
 
 MODEL_TYPES = tuple((key for key, val in MENU_OPS_CONFIG.items() if val.get("option_type") == "model"))
 
-COMPETING_TEAMS = tuple((t for t in Team.all if not t.is_free_agents))
-
 FREE_AGENT_TEAM = next((t for t in Team.all if t.is_free_agents), None)
-
 
 # session state
 
@@ -76,8 +71,6 @@ def create_participant() -> str:
 def recruit_free_agent() -> str:
     team = selected_entities.get("team")
     participant = selected_entities.get("participant")
-    
-    ensure_participants_loaded(FREE_AGENT_TEAM)
     
     result = assign_to_team(participant, team, FREE_AGENT_TEAM)
     if is_cancelled(result): return
@@ -162,23 +155,6 @@ def ensure_entity_loaded(model_type: str, selection_list: list) -> Union[Partici
     return entity
 
 
-def select_from_teams() -> Team:
-    """
-    Run the menu for selecting a competing team and lazy load participants to team.
-    """
-    selected_team = run_menu("team", COMPETING_TEAMS)
-    ensure_participants_loaded(selected_team)
-    return selected_team
-
-
-def select_from_participants(team: Team) -> Participant:
-    """
-    Run the menu for selecting a participant from a team.
-    """
-    selected_participant = run_menu("participant", team.participants)
-    return selected_participant
-
-
 def ensure_participants_loaded(team: Team) -> None:
     """
     Load the participants for the given team if they haven't been
@@ -191,12 +167,8 @@ def ensure_participants_loaded(team: Team) -> None:
     team.fetch_participants()
     participants_loaded.set(str(team.id), True)
 
-def reset_selected_entities_if_cleared(entity: Union[Participant, Team]) -> None:
-    if is_cleared(entity):
-        selected_entities.reset()
 
-
-# Runner function for the entire application
+# Application's main control flow
 
 def main():
     """
@@ -207,16 +179,17 @@ def main():
     
     exit_menu = False    
     while not exit_menu:
+        
         # run the main menu as the backbone of the application
         selection = run_menu("operation", **selected_entities.data)
-        reset_selected_entities_if_cleared(selection)
         
         if is_cancelled(selection): continue
 
         # if operation requires a team, ensure that selected_entities has one
         if OPS_CONFIG[selection].get("resolve_team"):
-            team = ensure_entity_loaded("team", COMPETING_TEAMS)
-            reset_selected_entities_if_cleared(team)
+            competing_teams = [t for t in Team.all if not t.is_free_agents]
+            
+            team = ensure_entity_loaded("team", competing_teams)
             
             if is_cancelled(team): continue
 
@@ -225,16 +198,22 @@ def main():
             
         # if operation requires a participant, ensure that selected_entities has one
         if OPS_CONFIG[selection].get("resolve_participant"):
-            participant = ensure_entity_loaded("participant", team.participants)
-            reset_selected_entities_if_cleared(participant)
+            selected_team_members = team.participants
+            free_agents = FREE_AGENT_TEAM.participants
+            participant_list = free_agents if selection == "recruit_free_agent" else selected_team_members
             
+            participant = ensure_entity_loaded("participant", participant_list)
+                        
             if is_cancelled(participant): continue
-        
-        print(selection); input()
-            
+                  
         # Execute the selected operation
         operation = globals().get(selection)
-        render_header(OPS_CONFIG.get(selection), generate_disp_name(participant), generate_disp_name(team), ctrl_c_cancel=True)
+        render_header(
+            OPS_CONFIG.get(selection),
+            generate_disp_name(participant),
+            generate_disp_name(team),
+            ctrl_c_cancel=True
+        )
         result = operation()
         
         # Render success screen

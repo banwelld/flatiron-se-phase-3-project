@@ -25,6 +25,7 @@ from strings.user_messages import NONE_SELECTED
 
 # menu option generation
 
+
 def generate_menu_options(
     option_type: str,
     entity_collection: Union[list, tuple],
@@ -83,6 +84,7 @@ def generate_operation_options(ops_collection: dict) -> tuple:
 
 # menu rendering
 
+
 def render_menu(
     menu_options: Union[tuple, dict, list],
     nav_options: Union[list, tuple],
@@ -98,7 +100,9 @@ def render_menu(
 # handling user input
 
 
-def handle_menu_input(menu_depth: int, options: tuple, display_all_options: bool) -> str:
+def handle_menu_input(
+    menu_depth: int, options: tuple, display_all_options: bool
+) -> str:
     """
     Solicits and returns a command-line response from a user if it passes validation.
     Warns user that response is invalid and repeats prompt until receiving a valid response.
@@ -110,7 +114,9 @@ def handle_menu_input(menu_depth: int, options: tuple, display_all_options: bool
         if response.isdigit() and int(response) >= 0:
             close_menu = validate_num_response(options, response)
         elif isinstance(response, str) and len(response) == 1:
-            close_menu = validate_alpha_response(response, menu_depth, display_all_options)
+            close_menu = validate_alpha_response(
+                response, menu_depth, display_all_options
+            )
         else:
             warn_invalid_selection()
 
@@ -118,6 +124,7 @@ def handle_menu_input(menu_depth: int, options: tuple, display_all_options: bool
 
 
 # validating user input
+
 
 def validate_num_response(options: tuple, response: str) -> bool:
     try:
@@ -128,12 +135,15 @@ def validate_num_response(options: tuple, response: str) -> bool:
         return False
 
 
-def validate_alpha_response(menu_response: str, menu_depth: int, display_all_options: bool) -> bool:
+def validate_alpha_response(
+    menu_response: str, menu_depth: int, display_all_options: bool
+) -> bool:
     if any(
         (
             menu_response in val["menu_option"]["selectors"]
             for val in NAV_OPS_CONFIG.values()
-            if menu_depth >= val["menu_option"]["visibility_depth"] or display_all_options
+            if menu_depth >= val["menu_option"]["visibility_depth"]
+            or display_all_options
         )
     ):
         return True
@@ -143,6 +153,7 @@ def validate_alpha_response(menu_response: str, menu_depth: int, display_all_opt
 
 
 # processing user input
+
 
 def process_num_response(options: tuple, menu_response: int) -> Union[type, str]:
     """
@@ -167,6 +178,7 @@ def process_alpha_response(menu_response: str) -> Union[str, None]:
 
 # utility functions
 
+
 def fmt_menu_options(menu_options: dict) -> tuple:
     return (
         tint_string(
@@ -181,7 +193,9 @@ def fmt_menu_options(menu_options: dict) -> tuple:
     )
 
 
-def fmt_nav_options(nav_options: dict, menu_depth: int, display_all_options: bool) -> tuple:
+def fmt_nav_options(
+    nav_options: dict, menu_depth: int, display_all_options: bool
+) -> tuple:
     return (
         tint_string(
             attrs["menu_option"]["format"],
@@ -202,13 +216,16 @@ def generate_nav_option_text(nav_attrs: dict) -> str:
 
 # runner function
 
+
 def run_menu(
     option_type: str,
     entity_collection: Union[list, tuple] = None,
     **selected: dict,
 ) -> Union[type, str, object]:
-    
-    show_selected_and_clear_option = selected.get("participants") is not None or selected.get("team") is not None
+
+    show_selected_and_clear_option = (
+        selected.get("participants") is not None or selected.get("team") is not None
+    )
 
     operation_config = MENU_OPS_CONFIG.get(option_type)
     nav_options = NAV_OPS_CONFIG
@@ -216,18 +233,26 @@ def run_menu(
 
     menu_depth = operation_config.get("menu_depth")
     menu_options = generate_menu_options(option_type, entity_collection, ops_collection)
-    
+
     team = selected.get("team", NONE_SELECTED)
     team_name = generate_disp_name(team, "fresh")
-    
+
     participant = selected.get("participant", NONE_SELECTED)
     participant_name = generate_disp_name(participant, "fresh")
-       
-    render_header(operation_config, participant_name, team_name, show_selected_and_clear_option, ctrl_c_cancel=False)
+
+    render_header(
+        operation_config,
+        participant_name,
+        team_name,
+        show_selected_and_clear_option,
+        ctrl_c_cancel=False,
+    )
 
     render_menu(menu_options, nav_options, menu_depth, show_selected_and_clear_option)
 
-    user_response = handle_menu_input(menu_depth, menu_options, show_selected_and_clear_option)
+    user_response = handle_menu_input(
+        menu_depth, menu_options, show_selected_and_clear_option
+    )
 
     if user_response.isdigit():
         return process_num_response(menu_options, int(user_response))

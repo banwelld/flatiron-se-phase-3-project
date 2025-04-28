@@ -8,14 +8,15 @@ from modules.get_config import NAV_OPS_CONFIG as NAV_CONFIG
 from modules.get_confirmation import get_confirmation
 from util.helpers import render_header
 from strings.tint_string import tint_string
-from strings.user_messages import YN_PROMPT, EXIT_MSG
+from strings.user_messages import EXIT_MSG, QUIT_PROMPT
 
 
 def quit_program():
     render_header(NAV_CONFIG["quit_program"])
-    
-    if not get_confirmation(tint_string("ask", YN_PROMPT)):
+
+    if not get_confirmation(tint_string("ask", QUIT_PROMPT)):
         return USER_CANCEL
 
+    print()
     print(tint_string("title", EXIT_MSG))
     exit()

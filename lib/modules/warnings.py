@@ -7,7 +7,7 @@ from strings.user_messages import (
     INVALID_DATE,
     TEAM_FULL,
 )
- 
+
 
 def warn_invalid_selection():
     render_warning(INVALID_SELECTION)

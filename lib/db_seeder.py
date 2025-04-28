@@ -26,7 +26,6 @@ def seed_db():
     m19 = Participant.create("Stuart", "Branch", "1978-11-23")
     m20 = Participant.create("Tina", "Harris-Jones", "1979-07-21")
 
-
     t1 = Team.create("The Aristocrats")
     t2 = Team.create("Catch Me If You Can")
     t3 = Team.create("The Dropouts")
@@ -46,7 +45,6 @@ def seed_db():
     for i in range(5):
         for mem in team_lists[i]:
             teams[i].append_participant(mem, do_persist=True)
-
 
 
 if __name__ == "__main__":

@@ -130,6 +130,7 @@ def parse_db_row(model: type, record: list):
 
 # utility functions for parse_db_row
 
+
 def get_repository(model, record):
     from util.helpers import find_entity_in_list
     from models.participant import Participant
@@ -142,22 +143,28 @@ def get_repository(model, record):
 
 
 def update_existing_instance(item, model, record):
-    config_keys = list(model.CONFIG)
+    config_keys = list(model.CONFIG.keys())
 
     for name, attr in model.CONFIG.items():
-        if not (attr.get("required") and attr.get("user_editable")):
+        is_required = attr.get("required")
+        is_editable = attr.get("user_editable")
+
+        if not is_required and is_editable:
             continue
 
         attr_index = config_keys.index(name)
+
         if attr_index >= len(record) - 1:
             continue
 
-        value = record[attr_index + 1]
+        value = record[attr_index]
         setattr(item, name, value)
 
 
 def create_instance(model, record):
-    field_list = tuple(record[1:]) if model.__name__.lower() == "team" else tuple(record[1:-1])
+    field_list = (
+        tuple(record[1:]) if model.__name__.lower() == "team" else tuple(record[1:-1])
+    )
     item = model(*field_list)
     item.id = record[0]
     return item

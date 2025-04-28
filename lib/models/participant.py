@@ -38,6 +38,9 @@ class Participant:
         self.birth_date = birth_date
         self.id = None
 
+    def __repr__(self):
+        return f"{self.last_name}, {self.first_name}"
+
     #  properties
 
     @property

@@ -19,6 +19,7 @@ from strings.user_messages import (
 
 # helper functions
 
+
 def get_action_msg(operation_name: str) -> str:
     return (
         OPS_CONFIG.get(operation_name, "OP_NOT_FOUND")
@@ -32,7 +33,9 @@ def print_collection(collection: Union[list, tuple]):
         print(item)
 
 
-def fmt_participant_name(first_name: str, last_name: str, tint_name: str = "plain") -> str:
+def fmt_participant_name(
+    first_name: str, last_name: str, tint_name: str = "plain"
+) -> str:
     if first_name is None or last_name is None:
         return ""
     return tint_string(tint_name, f"{last_name.upper()}, {first_name}")
@@ -52,8 +55,8 @@ def get_user_input_std(prompt_text: str) -> str:
     return input(tint_string("ask", f"\n{prompt_text}"))
 
 
-def get_model_type(model: Union[Participant, Team]) -> str:
-    return model.__name__.lower()
+def get_model_type(entity: Union[Participant, Team]) -> str:
+    return type(entity).__name__.lower()
 
 
 def find_entity_in_list(entities: list, entity_id: int) -> Union[Participant, Team]:
@@ -70,9 +73,13 @@ def generate_success_msg(disp_name: str, operation: str) -> str:
     return message
 
 
-def generate_disp_name(entity: Union[Participant, Team, str, None], tint_name: str = "fresh") -> str:
+def generate_disp_name(
+    entity: Union[Participant, Team, str, None], tint_name: str = "fresh"
+) -> str:
     if isinstance(entity, Participant):
-        entity_name = fmt_participant_name(entity.first_name, entity.last_name, tint_name)
+        entity_name = fmt_participant_name(
+            entity.first_name, entity.last_name, tint_name
+        )
     elif isinstance(entity, Team):
         entity_name = tint_string(tint_name, entity.name)
     elif isinstance(entity, str):
@@ -92,11 +99,13 @@ def process_nav_response(response: str) -> Union[object, None]:
     Returns the USER_CANCEL_SENTINEL if the entity is not the EXIT_SENTINEL.
     """
     from modules.quit_program import quit_program
-    
+    from cli import selected_entities
+
     if response == "exit":
         return quit_program()
 
     elif response == "clear":
+        selected_entities.reset()
         return USER_CLEAR
 
     else:
@@ -105,21 +114,24 @@ def process_nav_response(response: str) -> Union[object, None]:
 
 # cli rendering functions
 
+
 def render_header(
     operation_config: dict,
     participant_name: str = None,
     team_name: str = None,
     display_selected: bool = True,
-    ctrl_c_cancel: bool = True
+    ctrl_c_cancel: bool = True,
 ) -> None:
     clear_cli()
-    
+
     display_config = operation_config.get("display", {})
-    
+
     render_title(display_config.get("title", ""))
 
     if display_selected:
-        render_selected_entities_table(participant_name or NONE_SELECTED, team_name or NONE_SELECTED)
+        render_selected_entities_table(
+            participant_name or NONE_SELECTED, team_name or NONE_SELECTED
+        )
     if prompt := display_config.get("screen_prompt", False):
         render_instruction(prompt)
     if ctrl_c_cancel:
@@ -139,7 +151,7 @@ def render_instruction(instruction: str, color_key: str = "plain"):
 
 
 def render_selected_entities_table(participant_name: str, team_name: str):
-    line = ("-" * 55)
+    line = "-" * 55
     print(f"{tint_string('prompt', 'CURRENTLY SELECTED')}")
     print(f"{tint_string('prompt', line)}")
     print(f"{tint_string('prompt', 'Participant:'):>13} {participant_name}")

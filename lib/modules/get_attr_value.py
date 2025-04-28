@@ -29,6 +29,7 @@ def prompt_for_attr_value(
 
 # runner function
 
+
 def get_attr_value(
     model_type: str, attr_config: dict, display_text: str
 ) -> Union[str, object]:

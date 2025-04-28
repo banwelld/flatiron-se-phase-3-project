@@ -18,16 +18,15 @@ from util.db_helpers import (
     parse_db_row,
 )
 
+
 class Team:
     #  configuration
 
     CONFIG = MODEL_CONFIG
 
-
     # cache of all teams
 
     all = []
-
 
     # constructor
 
@@ -41,17 +40,17 @@ class Team:
         self.participants = []
         self.id = None
 
+    def __repr__(self):
+        return self.name
 
     @property
     def name(self):
         return self._name
 
-
     @name.setter
     @validate_name("team", "name")
     def name(self, name):
         self._name = name
-
 
     # class methods
 
@@ -64,14 +63,12 @@ class Team:
         """
         create_table(TABLE_CONFIG)
 
-
     @classmethod
     def delete_table(cls):
         """
         Deletes the table associated to the current class.
         """
         drop_table(TABLE_CONFIG)
-
 
     @classmethod
     def create(cls, name: str, is_free_agents: bool = False):
@@ -85,7 +82,6 @@ class Team:
         team.save()
         return team
 
-
     @classmethod
     def fetch_all(cls):
         """
@@ -95,7 +91,6 @@ class Team:
         db_data = select_all_rows(TABLE_CONFIG)
         result = [parse_db_row(cls, row) for row in db_data]
         return result
-
 
     # instance methods
 
@@ -113,7 +108,6 @@ class Team:
         Team.all.append(self)
         return self
 
-
     def update(self):
         """
         Overwrites a team's database record with new values.
@@ -126,7 +120,6 @@ class Team:
         )
         return self
 
-
     def delete(self):
         """
         Deletes team's database record, removes the team from Team.all,
@@ -135,7 +128,6 @@ class Team:
         delete_row(TABLE_CONFIG, self.id)
         Team.all.remove(self)
         self.id = None
-
 
     def fetch_participants(self):
         """
@@ -148,7 +140,6 @@ class Team:
 
         Participant.fetch_all(self.id)
 
-
     def append_participant(self, participant, do_persist: bool = False):
         """
         Adds a participant to the team and persists the assignment if do_persist has
@@ -160,7 +151,6 @@ class Team:
         if do_persist:
             participant.update(self.id)
 
-                        
     def remove_participant(self, participant):
         """
         Removes a participant from the team. Does NOT persist the removal as this will be

@@ -30,7 +30,7 @@
             "visibility_depth": 1,
             "format": "angry",
             "selectors": ["x", "q"],
-            "return_sentinel": "quit"
+            "return_sentinel": "exit"
         },
         "display": {
             "title": "Exit Application",

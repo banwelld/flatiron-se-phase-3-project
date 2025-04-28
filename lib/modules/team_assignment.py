@@ -9,6 +9,7 @@ from validation.enforcers import ensure_team_not_full
 
 # team assignment functions
 
+
 def assign_to_team(
     participant: Participant,
     destination_team: Team,
@@ -30,13 +31,15 @@ def assign_to_team(
         if not get_confirmation(confirmation_prompt):
             selected_entities.reset()
             return USER_CANCEL
-        
+
     if not destination_team.is_free_agents:
         if ensure_team_not_full(destination_team) is False:
             selected_entities.reset()
             return warn_team_full()
 
     if source_team:
+        print(source_team, participant)
+        input()
         source_team.remove_participant(participant)
     destination_team.append_participant(participant, do_persist=True)
 

@@ -65,9 +65,14 @@ def enforce_free_agent_team_id_1(team: type):
             f"Team '{team_name}' has incorrect id. Expected 1, got {team_id}. Database must be re-initialised and re-seeded"
         )
 
+
 def ensure_team_not_full(team: type) -> bool:
     try:
-         return enforce_range(len(team.participants), 0, team.CONFIG["participants"]["validation"]["max_list_length"])
-                
+        return enforce_range(
+            len(team.participants),
+            0,
+            team.CONFIG["participants"]["validation"]["max_list_length"],
+        )
+
     except ValueError:
         return False

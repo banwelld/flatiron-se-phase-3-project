@@ -35,22 +35,24 @@ team_table_filepath = config_filepath / "database" / "team" / "config.json"
 
 with team_table_filepath.open("r", encoding="utf-8") as team_table:
     TEAM_TABLE_CONFIG = json.load(team_table)
-    
-    
-participant_table_filepath = config_filepath / "database" / "participant" / "config.json"
+
+
+participant_table_filepath = (
+    config_filepath / "database" / "participant" / "config.json"
+)
 
 with participant_table_filepath.open("r", encoding="utf-8") as participant_table:
     PARTICIPANT_TABLE_CONFIG = json.load(participant_table)
-    
-    
+
+
 # open model config files for reading
 
 team_model_filepath = config_filepath / "model" / "team" / "config.json"
 
 with team_model_filepath.open("r", encoding="utf-8") as team_model:
     TEAM_MODEL_CONFIG = json.load(team_model)
-    
-    
+
+
 participant_model_filepath = config_filepath / "model" / "participant" / "config.json"
 
 with participant_model_filepath.open("r", encoding="utf-8") as participant_model:

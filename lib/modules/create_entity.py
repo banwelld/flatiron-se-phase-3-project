@@ -13,6 +13,7 @@ from modules.user_sentinels import USER_CANCEL
 
 # user input collection and validation
 
+
 def collect_user_responses(model_type: str, attr_config: dict) -> Union[str, object]:
     collection = {}
 
@@ -31,6 +32,7 @@ def collect_instantiation_data(
 
 
 # utility functions
+
 
 def generate_attr_config(model: Union[Participant, Team]) -> dict:
     """
@@ -52,6 +54,7 @@ def get_entity_name(model: Union[Participant, Team], attr_values: dict) -> str:
 
 # runner function
 
+
 def create_entity(model: Union[Participant, Team]) -> Union[Participant, Team]:
     """
     Collects data necessary for instantiating a participant or team, gets user confirmation
@@ -60,6 +63,7 @@ def create_entity(model: Union[Participant, Team]) -> Union[Participant, Team]:
     operation immediately.
     """
     from cli import selected_entities
+
     try:
         model_type = model.__name__.lower()
         attr_values = collect_instantiation_data(model, model_type)

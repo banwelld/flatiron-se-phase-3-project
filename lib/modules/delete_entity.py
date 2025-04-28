@@ -14,6 +14,7 @@ from util.helpers import get_model_type
 
 # runner_function
 
+
 def delete_entity(entity: Union[Participant, Team], destination_team: Team = None):
     """
     Confirms user's intent and deletes the selected entity of the specified model
@@ -23,6 +24,7 @@ def delete_entity(entity: Union[Participant, Team], destination_team: Team = Non
     """
     if not get_confirmation(f"Delete the selected {get_model_type(entity)}?"):
         from cli import selected_entities
+
         selected_entities.reset()
         return USER_CANCEL
 
@@ -31,8 +33,9 @@ def delete_entity(entity: Union[Participant, Team], destination_team: Team = Non
         team = entity.team()
         team.remove_participant(entity)
 
-    if team.participants:
-        # if team still has participants, make them free agents
-        reassign_all_participants(team, destination_team)
+    if isinstance(entity, Team):
+        if entity.participants:
+            # if team still has participants, make them free agents
+            reassign_all_participants(entity, destination_team)
 
     entity.delete()

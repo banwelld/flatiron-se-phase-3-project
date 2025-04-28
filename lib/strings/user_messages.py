@@ -12,7 +12,9 @@ INVALID_NAME_CHAR = "Invalid character(s) detected: Names may only contain lette
 
 INVALID_NAME_LEN = "Invalid name length: Participant: 2 to 20 characters (first), 2 to 30 characters (last). Team: 5 to 30 characters."
 
-INVALID_DATE_FORMAT = "Invalid date format. Please use YYYY-MM-DD format. (Must have leading zeros)"
+INVALID_DATE_FORMAT = (
+    "Invalid date format. Please use YYYY-MM-DD format. (Must have leading zeros)"
+)
 
 INVALID_DATE = "Invalid date: Date does not exist. Check day/month combination."
 
@@ -25,3 +27,5 @@ NONE_SELECTED = "None selected"
 OP_CANCELLED = "Operation cancelled by user."
 
 CANCEL_INSTRUCTION = "Hit Ctrl-C to return to the main menu."
+
+QUIT_PROMPT = "Are you sure you want to end your session?"

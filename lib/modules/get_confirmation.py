@@ -3,14 +3,12 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from util.helpers import (
-    get_user_input_std,
-    clear_cli
-)
+from util.helpers import get_user_input_std, clear_cli
 from modules.warnings import warn_invalid_selection
 from strings.user_messages import YN_PROMPT
 
 # ui rendering
+
 
 def render_confirmation_prompt(prompt_text: str):
     print()
@@ -20,6 +18,7 @@ def render_confirmation_prompt(prompt_text: str):
 
 # response validation
 
+
 def validate_confirmation_response(response: str):
     if response in ("y", "n"):
         return True
@@ -28,6 +27,7 @@ def validate_confirmation_response(response: str):
 
 
 # runner function
+
 
 def get_confirmation(prompt_text: str) -> bool:
     clear_cli()
