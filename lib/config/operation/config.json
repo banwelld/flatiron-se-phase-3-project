@@ -4,6 +4,7 @@
         "resolve_participant": false,
         "retain_sel_team": true,
         "retain_sel_participant": false,
+        "load_free_agents": false,
         "display": {
             "title": "New Team",
             "menu_text": "Create a New Team",
@@ -15,7 +16,8 @@
         "resolve_team": true,
         "resolve_participant": false,
         "retain_sel_team": true,
-        "retain_sel_participant": true,
+        "retain_sel_participant": false,
+        "load_free_agents": false,
         "display": {
             "title": "New Team Member",
             "menu_text": "Create a New Team Member",
@@ -28,6 +30,7 @@
         "resolve_participant": true,
         "retain_sel_team": true,
         "retain_sel_participant": false,
+        "load_free_agents": true,
         "display": {
             "title": "Recruit Free Agent",
             "menu_text": "Recruit Free Agent to Team",
@@ -40,6 +43,7 @@
         "resolve_participant": true,
         "retain_sel_team": true,
         "retain_sel_participant": true,
+        "load_free_agents": true,
         "display": {
             "title": "Remove Participant",
             "menu_text": "Remove Participant from Team",
@@ -52,6 +56,7 @@
         "resolve_participant": true,
         "retain_sel_team": true,
         "retain_sel_participant": false,
+        "load_free_agents": false,
         "display": {
             "title": "Delete Participant",
             "menu_text": "Delete Participant Record",
@@ -64,6 +69,7 @@
         "resolve_participant": false,
         "retain_sel_team": false,
         "retain_sel_participant": false,
+        "load_free_agents": true,
         "display": {
             "title": "Delete Team",
             "menu_text": "Delete Team Record",
@@ -74,8 +80,9 @@
     "update_participant_first_name": {
         "resolve_team": true,
         "resolve_participant": true,
-        "retain_sel_team": true,
-        "retain_sel_participant": true,
+        "retain_sel_team": false,
+        "retain_sel_participant": false,
+        "load_free_agents": false,
         "display": {
             "title": "Update First Name",
             "menu_text": "Update Participant First Name",
@@ -86,8 +93,9 @@
     "update_participant_last_name": {
         "resolve_team": true,
         "resolve_participant": true,
-        "retain_sel_team": true,
-        "retain_sel_participant": true,
+        "retain_sel_team": false,
+        "retain_sel_participant": false,
+        "load_free_agents": false,
         "display": {
             "title": "Update Last Name",
             "menu_text": "Update Participant Last Name",
@@ -100,6 +108,7 @@
         "resolve_participant": false,
         "retain_sel_team": false,
         "retain_sel_participant": false,
+        "load_free_agents": false,
         "display": {
             "title": "Update Team Name",
             "menu_text": "Update Team Name",

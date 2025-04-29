@@ -29,7 +29,7 @@ from strings.user_messages import NONE_SELECTED
 def generate_menu_options(
     option_type: str,
     entity_collection: Union[list, tuple],
-    ops_collection: dict,
+    operation_collection: dict,
 ) -> tuple:
     """
     Generates and returns a tuple of menu options based on the provided option
@@ -42,18 +42,36 @@ def generate_menu_options(
         options = generate_team_options(entity_collection)
 
     elif option_type == "operation":
-        options = generate_operation_options(ops_collection)
+        options = generate_operation_options(operation_collection)
 
     return tuple(options)
+
+
+def generate_nav_options(menu_ops_config: dict, nav_config: dict, **selected: dict) -> tuple:
+    menu_depth = menu_ops_config.get("menu_depth", 2)
+    
+    participant_selected = selected.get("participant")
+    team_selected = selected.get("team")
+    entity_selected = participant_selected is not None or team_selected is not None
+    
+    options = {}
+    
+    for option_name, option_config in nav_config.items():
+        is_exit = option_config["menu_option"]["return_sentinel"] == "exit"
+        has_entities = (option_config["menu_option"]["return_sentinel"] == "clear") and entity_selected
+        is_deep_enough = option_config["menu_option"]["visibility_depth"] >= menu_depth
+        
+        if is_exit or has_entities or is_deep_enough:
+            options[option_name] = option_config
+    
+    return options
+    
 
 
 def generate_participant_options(entity_collection: Union[list, tuple]) -> tuple:
     return (
         {
-            "menu_text": fmt_participant_name(
-                participant.first_name,
-                participant.last_name,
-            ),
+            "menu_text": generate_disp_name(participant, "option"),
             "selection_item": participant,
         }
         for participant in entity_collection
@@ -63,22 +81,26 @@ def generate_participant_options(entity_collection: Union[list, tuple]) -> tuple
 def generate_team_options(entity_collection: Union[list, tuple]) -> tuple:
     return (
         {
-            "menu_text": team.name,
+            "menu_text": generate_disp_name(team, "option"),
             "selection_item": team,
         }
         for team in entity_collection
     )
 
 
-def generate_operation_options(ops_collection: dict) -> tuple:
+def generate_operation_options(operation_collection: dict) -> tuple:
     return (
         {
-            "menu_text": attrs["display"].get(
-                "menu_text", "** No Description Available **"
+            "menu_text": tint_string(
+                "option",
+                attrs["display"].get(
+                    "menu_text",
+                    "** No Description Available **",
+                ),
             ),
             "selection_item": operation_name,
         }
-        for operation_name, attrs in ops_collection.items()
+        for operation_name, attrs in operation_collection.items()
     )
 
 
@@ -88,35 +110,28 @@ def generate_operation_options(ops_collection: dict) -> tuple:
 def render_menu(
     menu_options: Union[tuple, dict, list],
     nav_options: Union[list, tuple],
-    menu_depth: int,
-    display_all_options: bool = False,
 ):
     print_collection(fmt_menu_options(menu_options))
     print()
-    print_collection(fmt_nav_options(nav_options, menu_depth, display_all_options))
+    print_collection(fmt_nav_options(nav_options))
     print()
 
 
 # handling user input
 
-
-def handle_menu_input(
-    menu_depth: int, options: tuple, display_all_options: bool
-) -> str:
+def handle_menu_input(menu_options: tuple, nav_options: dict) -> str:
     """
     Solicits and returns a command-line response from a user if it passes validation.
     Warns user that response is invalid and repeats prompt until receiving a valid response.
     """
-    close_menu: bool = False
+    close_menu = False
     while not close_menu:
         response = get_user_input_std("Enter your selection: ")
 
         if response.isdigit() and int(response) >= 0:
-            close_menu = validate_num_response(options, response)
+            close_menu = validate_num_response(menu_options, response)
         elif isinstance(response, str) and len(response) == 1:
-            close_menu = validate_alpha_response(
-                response, menu_depth, display_all_options
-            )
+            close_menu = validate_alpha_response(nav_options, response)
         else:
             warn_invalid_selection()
 
@@ -135,15 +150,11 @@ def validate_num_response(options: tuple, response: str) -> bool:
         return False
 
 
-def validate_alpha_response(
-    menu_response: str, menu_depth: int, display_all_options: bool
-) -> bool:
+def validate_alpha_response(nav_options: dict, menu_response: str) -> bool:
     if any(
         (
             menu_response in val["menu_option"]["selectors"]
-            for val in NAV_OPS_CONFIG.values()
-            if menu_depth >= val["menu_option"]["visibility_depth"]
-            or display_all_options
+            for val in nav_options.values()
         )
     ):
         return True
@@ -153,7 +164,6 @@ def validate_alpha_response(
 
 
 # processing user input
-
 
 def process_num_response(options: tuple, menu_response: int) -> Union[type, str]:
     """
@@ -181,28 +191,22 @@ def process_alpha_response(menu_response: str) -> Union[str, None]:
 
 def fmt_menu_options(menu_options: dict) -> tuple:
     return (
-        tint_string(
-            "option",
-            (
-                f"{index:<2} {option['menu_text']}"
-                if isinstance(option, dict)
-                else f"{index:<2} {option}"
-            ),
+        (
+            f"{index:<2} {option['menu_text']}"
+            if isinstance(option, dict)
+            else f"{index:<2} {option}"
         )
         for index, option in enumerate(menu_options, start=1)
     )
 
 
-def fmt_nav_options(
-    nav_options: dict, menu_depth: int, display_all_options: bool
-) -> tuple:
+def fmt_nav_options(nav_options: dict) -> tuple:
     return (
         tint_string(
             attrs["menu_option"]["format"],
             generate_nav_option_text(attrs),
         )
         for attrs in nav_options.values()
-        if menu_depth >= attrs["menu_option"]["visibility_depth"] or display_all_options
     )
 
 
@@ -216,49 +220,47 @@ def generate_nav_option_text(nav_attrs: dict) -> str:
 
 # runner function
 
-
 def run_menu(
     option_type: str,
+    clear_selected_func: callable,
     entity_collection: Union[list, tuple] = None,
     **selected: dict,
 ) -> Union[type, str, object]:
 
-    show_selected_and_clear_option = (
-        selected.get("participants") is not None or selected.get("team") is not None
-    )
-
     operation_config = MENU_OPS_CONFIG.get(option_type)
-    nav_options = NAV_OPS_CONFIG
-    ops_collection = OPS_CONFIG
+    operation_collection = OPS_CONFIG
 
-    menu_depth = operation_config.get("menu_depth")
-    menu_options = generate_menu_options(option_type, entity_collection, ops_collection)
-
-    team = selected.get("team", NONE_SELECTED)
+    team = selected.get("team")
     team_name = generate_disp_name(team, "fresh")
 
-    participant = selected.get("participant", NONE_SELECTED)
+    participant = selected.get("participant")
     participant_name = generate_disp_name(participant, "fresh")
+    
+    entity_selected = team != None or participant != None
+    
+    print("entity_selected: ", entity_selected)
+    print(team, participant); input()
 
+    menu_options = generate_menu_options(option_type, entity_collection, operation_collection)
+    nav_options = generate_nav_options(operation_config, NAV_OPS_CONFIG, **selected)
+    
     render_header(
         operation_config,
         participant_name,
         team_name,
-        show_selected_and_clear_option,
+        entity_selected,
         ctrl_c_cancel=False,
     )
 
-    render_menu(menu_options, nav_options, menu_depth, show_selected_and_clear_option)
+    render_menu(menu_options, nav_options)
 
-    user_response = handle_menu_input(
-        menu_depth, menu_options, show_selected_and_clear_option
-    )
+    user_response = handle_menu_input(menu_options, nav_options)
 
     if user_response.isdigit():
         return process_num_response(menu_options, int(user_response))
     else:
         nav_operation = process_alpha_response(user_response)
-        return process_nav_response(nav_operation)
+        return process_nav_response(nav_operation, clear_selected_func)
 
 
 if __name__ == "__main__":

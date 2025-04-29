@@ -71,7 +71,7 @@ def create_participant() -> str:
 def recruit_free_agent() -> str:
     team = selected_entities.get("team")
     participant = selected_entities.get("participant")
-    
+
     result = assign_to_team(participant, team, FREE_AGENT_TEAM)
     if is_cancelled(result): return
     
@@ -82,8 +82,6 @@ def remove_participant() -> str:
     team = selected_entities.get("team")
     participant = selected_entities.get("participant")
     
-    ensure_participants_loaded(FREE_AGENT_TEAM)
-
     result = assign_to_team(participant, FREE_AGENT_TEAM, team)
     if is_cancelled(result): return
     
@@ -94,8 +92,6 @@ def delete_team() -> str:
     team = selected_entities.get("team")
     team_name = generate_disp_name(team)
     
-    ensure_participants_loaded(FREE_AGENT_TEAM)
-
     result = delete_entity(team, FREE_AGENT_TEAM)
     if is_cancelled(result): return
     
@@ -141,11 +137,11 @@ def update_team_name() -> str:
 
 # utility functions
 
-def ensure_entity_loaded(model_type: str, selection_list: list) -> Union[Participant, Team]:
+def ensure_entity_loaded(model_type: str, selection_list: list, clear_selected_func: callable) -> Union[Participant, Team]:
     if entity := selected_entities.get(model_type):
         return entity
     
-    entity = run_menu(model_type, selection_list, **selected_entities.data)
+    entity = run_menu(model_type, clear_selected_func, selection_list, **selected_entities.data)
     
     if is_cancelled(entity):
         return entity
@@ -162,10 +158,14 @@ def ensure_participants_loaded(team: Team) -> None:
     have been loaded.
     """
     if participants_loaded.get(str(team.id)):
+        print(team.participants)
+        print(participants_loaded.data); input()
         return
     
     team.fetch_participants()
     participants_loaded.set(str(team.id), True)
+    print(team.participants)
+    print(participants_loaded.data); input()
 
 
 # Application's main control flow
@@ -181,7 +181,7 @@ def main():
     while not exit_menu:
         
         # run the main menu as the backbone of the application
-        selection = run_menu("operation", **selected_entities.data)
+        selection = run_menu("operation", selected_entities.reset, **selected_entities.data)
         
         if is_cancelled(selection): continue
 
@@ -189,12 +189,15 @@ def main():
         if OPS_CONFIG[selection].get("resolve_team"):
             competing_teams = [t for t in Team.all if not t.is_free_agents]
             
-            team = ensure_entity_loaded("team", competing_teams)
+            team = ensure_entity_loaded("team", competing_teams, selected_entities.reset)
             
             if is_cancelled(team): continue
 
             # lazy load a team's members when it's been selected
             ensure_participants_loaded(team)
+            
+        if OPS_CONFIG[selection].get("load_free_agents"):
+            ensure_participants_loaded(FREE_AGENT_TEAM)
             
         # if operation requires a participant, ensure that selected_entities has one
         if OPS_CONFIG[selection].get("resolve_participant"):
@@ -202,7 +205,7 @@ def main():
             free_agents = FREE_AGENT_TEAM.participants
             participant_list = free_agents if selection == "recruit_free_agent" else selected_team_members
             
-            participant = ensure_entity_loaded("participant", participant_list)
+            participant = ensure_entity_loaded("participant", participant_list, selected_entities.reset)
                         
             if is_cancelled(participant): continue
                   
@@ -223,7 +226,7 @@ def main():
         if OPS_CONFIG[selection].get("retain_sel_team") is False:
             selected_entities.set("team", None)
         
-        if OPS_CONFIG[selection].get("retain_sel_participants") is False:
+        if OPS_CONFIG[selection].get("retain_sel_participant") is False:
             selected_entities.set("participant", None)
         
         

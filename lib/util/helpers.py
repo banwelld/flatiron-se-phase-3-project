@@ -76,6 +76,7 @@ def generate_success_msg(disp_name: str, operation: str) -> str:
 def generate_disp_name(
     entity: Union[Participant, Team, str, None], tint_name: str = "fresh"
 ) -> str:
+    entity_name = NONE_SELECTED
     if isinstance(entity, Participant):
         entity_name = fmt_participant_name(
             entity.first_name, entity.last_name, tint_name
@@ -92,7 +93,7 @@ def generate_disp_name(
     return entity_name
 
 
-def process_nav_response(response: str) -> Union[object, None]:
+def process_nav_response(response: str, clear_selected_func: callable) -> Union[object, None]:
     """
     Returns quit_program() if the entity is the EXIT_SENTINEL.
     Clears the selected entities if the entity is the CLEAR_SENTINEL.
@@ -105,7 +106,7 @@ def process_nav_response(response: str) -> Union[object, None]:
         return quit_program()
 
     elif response == "clear":
-        selected_entities.reset()
+        clear_selected_func()
         return USER_CLEAR
 
     else:
@@ -119,7 +120,7 @@ def render_header(
     operation_config: dict,
     participant_name: str = None,
     team_name: str = None,
-    display_selected: bool = True,
+    entity_selected: bool = True,
     ctrl_c_cancel: bool = True,
 ) -> None:
     clear_cli()
@@ -128,7 +129,7 @@ def render_header(
 
     render_title(display_config.get("title", ""))
 
-    if display_selected:
+    if entity_selected:
         render_selected_entities_table(
             participant_name or NONE_SELECTED, team_name or NONE_SELECTED
         )
