@@ -8,9 +8,10 @@ from util.helpers import get_user_input_std
 from validation.frontend import validate_date, validate_name
 
 
-def validate_attr_value_response(
-    attr_display_name: str, attr_config: dict, response: str
-):
+# utility functions
+
+
+def validate_attr_value_response(attr_config: dict, response: str):
     data_type = attr_config["validation"]["validate_as"]
 
     if data_type == "name":
@@ -27,7 +28,7 @@ def prompt_for_attr_value(
     return get_user_input_std(prompt_text)
 
 
-# runner function
+# operational control flow
 
 
 def get_attr_value(
@@ -39,6 +40,6 @@ def get_attr_value(
 
     while not exit_loop:
         response = prompt_for_attr_value(model_type, display_text)
-        exit_loop = validate_attr_value_response(display_text, attr_config, response)
+        exit_loop = validate_attr_value_response(attr_config, response)
 
     return response

@@ -9,10 +9,10 @@ from models.team import Team
 from modules.get_confirmation import get_confirmation
 from modules.team_assignment import reassign_all_participants
 from modules.user_sentinels import USER_CANCEL
-from util.helpers import get_model_type
+from util.helpers import get_model_type, generate_disp_text
 
 
-# runner_function
+# operational control flow
 
 
 def delete_entity(entity: Union[Participant, Team], destination_team: Team = None):
@@ -22,14 +22,18 @@ def delete_entity(entity: Union[Participant, Team], destination_team: Team = Non
     If entity is participant, removes it from its team. If entity is team, evacuates
     all participants from the team and makes them free agents.
     """
-    if not get_confirmation(f"Delete the selected {get_model_type(entity)}?"):
+    entity_name = generate_disp_text(entity)
+
+    if not get_confirmation(
+        f"Delete selected {get_model_type(entity)}: {entity_name}?"
+    ):
         from cli import selected_entities
 
         selected_entities.reset()
         return USER_CANCEL
 
     if isinstance(entity, Participant):
-        # remove participant its team
+        # remove participant from its team
         team = entity.team()
         team.remove_participant(entity)
 

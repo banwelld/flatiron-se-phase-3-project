@@ -170,9 +170,3 @@ class Participant:
             if self in t.participants:
                 return t
         return None
-
-
-if __name__ == "__main__":
-    d = Participant.create("John", "Doe", "1999-09-09")
-    print(d.last_name.upper(), d.first_name)
-    print(Participant.CONFIG)

@@ -22,10 +22,10 @@ TEAM_FULL = "Team is full. Cannot add more participants."
 
 EXIT_MSG = "Exiting program. Goodbye!"
 
-NONE_SELECTED = "None selected"
+NONE_SELECTED = "None Selected"
 
-OP_CANCELLED = "Operation cancelled by user."
+OP_CANCELLED = "Operation cancelled."
 
-CANCEL_INSTRUCTION = "Hit Ctrl-C to return to the main menu."
+CANCEL_INSTRUCTION = "* <Ctrl + C> to cancel and return to the main menu *"
 
 QUIT_PROMPT = "Are you sure you want to end your session?"

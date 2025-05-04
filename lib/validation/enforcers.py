@@ -66,12 +66,12 @@ def enforce_free_agent_team_id_1(team: type):
         )
 
 
-def ensure_team_not_full(team: type) -> bool:
+def ensure_team_has_room(team: type) -> bool:
     try:
         return enforce_range(
-            len(team.participants),
+            len(team.participants) + 1,
             0,
-            team.CONFIG["participants"]["validation"]["max_list_length"],
+            team.CONFIG["participants"]["validation"].get("max_list_length"),
         )
 
     except ValueError:

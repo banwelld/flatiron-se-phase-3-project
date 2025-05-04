@@ -9,6 +9,7 @@ from models.team import Team
 from modules.get_attr_value import get_attr_value
 from modules.get_confirmation import get_confirmation
 from modules.user_sentinels import USER_CANCEL
+from util.helpers import generate_disp_text
 
 
 # utility functions
@@ -24,7 +25,7 @@ def update_attr_and_persist(
     entity.update()
 
 
-# runner function
+# operational control flow
 
 
 def update_entity(entity: Union[Participant, Team], attr_name: str) -> None:
@@ -32,11 +33,14 @@ def update_entity(entity: Union[Participant, Team], attr_name: str) -> None:
         model = type(entity)
         model_type = model.__name__.lower()
         attr_config = model.CONFIG.get(attr_name)
-        display_text = attr_config.get("display_text")
+        attr_disp_text = attr_config.get("display_text")
 
-        new_value = get_attr_value(model_type, attr_config, display_text)
+        new_value = get_attr_value(model_type, attr_config, attr_disp_text)
+        new_value_disp_text = generate_disp_text(new_value)
 
-        if not get_confirmation(f"Update {model_type} {display_text} to {new_value}?"):
+        if not get_confirmation(
+            f"Update {model_type} {attr_disp_text} to {new_value_disp_text}?"
+        ):
             from cli import selected_entities
 
             selected_entities.reset()
@@ -46,16 +50,3 @@ def update_entity(entity: Union[Participant, Team], attr_name: str) -> None:
 
     except KeyboardInterrupt:
         return USER_CANCEL
-
-
-# test setup
-
-if __name__ == "__main__":
-    new_participant = Participant("John", "Doe", "1999-09-09")
-    update_entity(new_participant, Participant, "first_name", object())
-    print(
-        "\n",
-        new_participant.first_name,
-        new_participant.last_name,
-        new_participant.birth_date,
-    )

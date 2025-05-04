@@ -4,6 +4,7 @@ USER_CANCEL = object()
 USER_CLEAR = object()
 PROCESS_CANCEL = object()
 
+
 def is_cancelled(value: any) -> object:
     """
     If value is a sentinel, returns the sentinel. If value is not a sentinel, returns None.

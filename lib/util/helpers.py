@@ -21,10 +21,8 @@ from strings.user_messages import (
 
 
 def get_action_msg(operation_name: str) -> str:
-    return (
-        OPS_CONFIG.get(operation_name, "OP_NOT_FOUND")
-        .get("display", "NO_DISP_ATTR")
-        .get("action_message", "NO_MESSAGE")
+    return OPS_CONFIG[operation_name]["display"].get(
+        "action_message", "ACTION_MESSAGE_NOT_AVAILABLE"
     )
 
 
@@ -33,12 +31,10 @@ def print_collection(collection: Union[list, tuple]):
         print(item)
 
 
-def fmt_participant_name(
-    first_name: str, last_name: str, tint_name: str = "plain"
-) -> str:
+def fmt_participant_name(first_name: str, last_name: str) -> str:
     if first_name is None or last_name is None:
         return ""
-    return tint_string(tint_name, f"{last_name.upper()}, {first_name}")
+    return f"{last_name.upper()}, {first_name}"
 
 
 def clear_cli():
@@ -73,27 +69,26 @@ def generate_success_msg(disp_name: str, operation: str) -> str:
     return message
 
 
-def generate_disp_name(
-    entity: Union[Participant, Team, str, None], tint_name: str = "fresh"
+def generate_disp_text(
+    text_or_entity: Union[Participant, Team, str, None], tint_name: str = "fresh"
 ) -> str:
-    entity_name = NONE_SELECTED
-    if isinstance(entity, Participant):
-        entity_name = fmt_participant_name(
-            entity.first_name, entity.last_name, tint_name
+    result = NONE_SELECTED
+    if isinstance(text_or_entity, Participant):
+        participant_name = fmt_participant_name(
+            text_or_entity.first_name, text_or_entity.last_name
         )
-    elif isinstance(entity, Team):
-        entity_name = tint_string(tint_name, entity.name)
-    elif isinstance(entity, str):
-        entity_name = tint_string(tint_name, entity)
-    elif entity is None:
-        entity_name = NONE_SELECTED
+        result = tint_string(tint_name, participant_name)
+    elif isinstance(text_or_entity, Team):
+        result = tint_string(tint_name, text_or_entity.name)
+    elif isinstance(text_or_entity, str) and text_or_entity != NONE_SELECTED:
+        result = tint_string(tint_name, text_or_entity)
 
-    if entity_name == "None Selected":
-        return tint_string("oops", entity_name)
-    return entity_name
+    return result
 
 
-def process_nav_response(response: str, clear_selected_func: callable) -> Union[object, None]:
+def process_nav_response(
+    response: str, clear_selected_func: callable
+) -> Union[object, None]:
     """
     Returns quit_program() if the entity is the EXIT_SENTINEL.
     Clears the selected entities if the entity is the CLEAR_SENTINEL.
@@ -117,7 +112,8 @@ def process_nav_response(response: str, clear_selected_func: callable) -> Union[
 
 
 def render_header(
-    operation_config: dict,
+    operation_name: str,
+    instruction: str,
     participant_name: str = None,
     team_name: str = None,
     entity_selected: bool = True,
@@ -125,22 +121,23 @@ def render_header(
 ) -> None:
     clear_cli()
 
-    display_config = operation_config.get("display", {})
+    render_title(operation_name)
 
-    render_title(display_config.get("title", ""))
+    if ctrl_c_cancel:
+        print(CANCEL_INSTRUCTION)
+        print("\n")
 
     if entity_selected:
         render_selected_entities_table(
             participant_name or NONE_SELECTED, team_name or NONE_SELECTED
         )
-    if prompt := display_config.get("screen_prompt", False):
-        render_instruction(prompt)
-    if ctrl_c_cancel:
-        render_instruction(f"({CANCEL_INSTRUCTION})", "nope")
+
+    if instruction:
+        render_instruction(instruction)
 
 
-def render_title(text: str = ""):
-    title = generate_title(text)
+def render_title(operation_name: str):
+    title = generate_title(operation_name).upper()
     print(tint_string("title", title.upper()))
     print(tint_string("title", "=" * len(title)))
     print()
@@ -152,13 +149,15 @@ def render_instruction(instruction: str, color_key: str = "plain"):
 
 
 def render_selected_entities_table(participant_name: str, team_name: str):
-    line = "-" * 55
+    line = "-" * 50
     print(f"{tint_string('prompt', 'CURRENTLY SELECTED')}")
     print(f"{tint_string('prompt', line)}")
-    print(f"{tint_string('prompt', 'Participant:'):>13} {participant_name}")
-    print(f"{tint_string('prompt', line)}")
-    print(f"{tint_string('prompt', 'Team:'):>13} {team_name}")
-    print(f"{tint_string('prompt', line)}")
+    if participant_name != "None Selected":
+        print(f"{tint_string('prompt', 'Participant:')} {participant_name}")
+        print(f"{tint_string('prompt', line)}")
+    if team_name != NONE_SELECTED:
+        print(f"{tint_string('prompt', 'Team:')} {team_name}")
+        print(f"{tint_string('prompt', line)}")
     print()
 
 
@@ -179,11 +178,12 @@ def render_result_screen(entity_name: str, operation: str):
     input(tint_string("plain", HIT_ENTER))
 
 
-def render_warning(warning_msg: str):
+def render_warning(warning_msg: str, enter_to_continue: bool = False):
     """
     Generates standardized warning messages to user in "oops" yellow from provided text.
     """
     print()
     print(tint_string("oops", warning_msg))
-    print()
-    print()
+    print("\n")
+    if enter_to_continue:
+        input(tint_string("plain", HIT_ENTER))

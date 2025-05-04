@@ -4,7 +4,7 @@
         "option_type": "operation",
         "display": {
             "title": "Operation Selection",
-            "screen_prompt": "What would you like to do? "
+            "instruction": "What would you like to do? "
         }
     },
     "team": {
@@ -12,7 +12,7 @@
         "option_type": "model",
         "display": {
             "title": "Team Selection",
-            "screen_prompt": "Select a team: "
+            "instruction": "Select a team: "
         }
     },
     "participant": {
@@ -20,7 +20,7 @@
         "option_type": "model",
         "display": {
             "title": "Participant Selection",
-            "screen_prompt": "Select a Participant: "
+            "instruction": "Select a Participant: "
         }
     }
 }

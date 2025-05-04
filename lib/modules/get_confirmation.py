@@ -3,9 +3,13 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from util.helpers import get_user_input_std, clear_cli
+from util.helpers import (
+    get_user_input_std,
+    clear_cli,
+)
 from modules.warnings import warn_invalid_selection
 from strings.user_messages import YN_PROMPT
+
 
 # ui rendering
 
@@ -26,11 +30,13 @@ def validate_confirmation_response(response: str):
     return False
 
 
-# runner function
+# operational control flow
 
 
-def get_confirmation(prompt_text: str) -> bool:
-    clear_cli()
+def get_confirmation(prompt_text: str, do_clear_screen: bool = True) -> bool:
+    if do_clear_screen:
+        clear_cli()
+
     render_confirmation_prompt(prompt_text)
 
     exit_loop = False
@@ -40,8 +46,3 @@ def get_confirmation(prompt_text: str) -> bool:
         exit_loop = validate_confirmation_response(response)
 
     return True if response == "y" else False
-
-
-if __name__ == "__main__":
-    result = get_confirmation("Has this process worked to your satisfaction?")
-    print(f"\nYou selected {result}!")

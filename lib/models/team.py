@@ -43,6 +43,8 @@ class Team:
     def __repr__(self):
         return self.name
 
+    # properties
+
     @property
     def name(self):
         return self._name

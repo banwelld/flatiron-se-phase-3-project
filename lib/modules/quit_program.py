@@ -11,10 +11,18 @@ from strings.tint_string import tint_string
 from strings.user_messages import EXIT_MSG, QUIT_PROMPT
 
 
-def quit_program():
-    render_header(NAV_CONFIG["quit_program"])
+# operational control flow
 
-    if not get_confirmation(tint_string("ask", QUIT_PROMPT)):
+
+def quit_program():
+    render_header(
+        NAV_CONFIG["quit_program"]["display"].get("title"),
+        None,
+        entity_selected=False,
+        ctrl_c_cancel=False,
+    )
+
+    if not get_confirmation(tint_string("plain", QUIT_PROMPT), False):
         return USER_CANCEL
 
     print()

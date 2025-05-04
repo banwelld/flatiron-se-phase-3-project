@@ -30,4 +30,4 @@ def warn_date_invalid():
 
 
 def warn_team_full():
-    render_warning(TEAM_FULL)
+    render_warning(TEAM_FULL, enter_to_continue=True)

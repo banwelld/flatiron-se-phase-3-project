@@ -8,7 +8,7 @@
         },
         "display": {
             "title": null,
-            "menu_text": "Back to Main Menu",
+            "menu_text": "Main Menu",
             "show_selected_entities": false
         }
     },
@@ -21,7 +21,7 @@
         },
         "display": {
             "title": null,
-            "menu_text": "Clear Selections and Start Over",
+            "menu_text": "Main Menu and Clear All Selected",
             "show_selected_entities": false
         }
     },

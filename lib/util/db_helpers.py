@@ -1,5 +1,7 @@
 from __init__ import CURSOR, CONN
 
+# standard database operations
+
 
 def create_table(table_def: dict):
     """

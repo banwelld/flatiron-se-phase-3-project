@@ -8,8 +8,8 @@
         "display": {
             "title": "New Team",
             "menu_text": "Create a New Team",
-            "screen_prompt": "Submit a response for each of the requested details.",
-            "action_message": "Team created."
+            "instruction": "Please enter a value for each of the requested details.",
+            "action_message": "Team created"
         }
     },
     "create_participant": {
@@ -21,8 +21,8 @@
         "display": {
             "title": "New Team Member",
             "menu_text": "Create a New Team Member",
-            "screen_prompt": "Submit a response for each of the requested details.",
-            "action_message": "Participant created."
+            "instruction": "Please enter a value for each of the requested details.",
+            "action_message": "Participant created"
         }
     },
     "recruit_free_agent": {
@@ -34,21 +34,21 @@
         "display": {
             "title": "Recruit Free Agent",
             "menu_text": "Recruit Free Agent to Team",
-            "screen_prompt": null,
-            "action_message": "Participant added to team."
+            "instruction": null,
+            "action_message": "Participant added to team"
         }
     },
     "remove_participant": {
         "resolve_team": true,
         "resolve_participant": true,
-        "retain_sel_team": true,
+        "retain_sel_team": false,
         "retain_sel_participant": true,
         "load_free_agents": true,
         "display": {
             "title": "Remove Participant",
             "menu_text": "Remove Participant from Team",
-            "screen_prompt": null,
-            "action_message": "Participant removed from team."
+            "instruction": null,
+            "action_message": "Participant removed from team"
         }
     },
     "delete_participant": {
@@ -60,8 +60,8 @@
         "display": {
             "title": "Delete Participant",
             "menu_text": "Delete Participant Record",
-            "screen_prompt": null,
-            "action_message": "Participant deleted."
+            "instruction": null,
+            "action_message": "Participant deleted"
         }
     },
     "delete_team": {
@@ -73,8 +73,8 @@
         "display": {
             "title": "Delete Team",
             "menu_text": "Delete Team Record",
-            "screen_prompt": null,
-            "action_message": "Team deleted. Participants (if any) released."
+            "instruction": null,
+            "action_message": "Team deleted and participants (if any) added to free agents"
         }
     },
     "update_participant_first_name": {
@@ -86,8 +86,8 @@
         "display": {
             "title": "Update First Name",
             "menu_text": "Update Participant First Name",
-            "screen_prompt": "Submit the participant's new first name.",
-            "action_message": "Participant first name updated."
+            "instruction": "Please enter the participant's new first name.",
+            "action_message": "Participant first name updated"
         }
     },
     "update_participant_last_name": {
@@ -99,8 +99,8 @@
         "display": {
             "title": "Update Last Name",
             "menu_text": "Update Participant Last Name",
-            "screen_prompt": "Submit the participant's new last name.",
-            "action_message": "Participant last name updated."
+            "instruction": "Please enter the participant's new last name.",
+            "action_message": "Participant last name updated"
         }
     },
     "update_team_name": {
@@ -112,8 +112,8 @@
         "display": {
             "title": "Update Team Name",
             "menu_text": "Update Team Name",
-            "screen_prompt": "Submit the team's new name.",
-            "action_message": "Team name updated."
+            "instruction": "Please enter the team's new name.",
+            "action_message": "Team name updated"
         }
     }
 }
