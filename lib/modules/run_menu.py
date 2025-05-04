@@ -15,16 +15,13 @@ from strings.tint_string import tint_string
 from util.helpers import (
     process_nav_response,
     print_collection,
-    fmt_participant_name,
     get_user_input_std,
     render_header,
     generate_disp_name,
 )
-from strings.user_messages import NONE_SELECTED
 
 
 # menu option generation
-
 
 def generate_menu_options(
     option_type: str,
@@ -47,26 +44,35 @@ def generate_menu_options(
     return tuple(options)
 
 
-def generate_nav_options(menu_ops_config: dict, nav_config: dict, **selected: dict) -> tuple:
-    menu_depth = menu_ops_config.get("menu_depth", 2)
+def generate_nav_options(menu_ops_config: dict, nav_config: dict, entity_selected: bool) -> dict:
+    """
+    Generates a dict of navigational menu options based on the conditions necessary for displaying
+    each option.
     
-    participant_selected = selected.get("participant")
-    team_selected = selected.get("team")
-    entity_selected = participant_selected is not None or team_selected is not None
+    The exit option is shown, by default, allowing users to end their current session altogether.
+    The clear option is shown iff selected_entities contains either a participant or a team. And 
+    the back option is shown on menus where the option's visibility depth is equal to or exceeds
+    the menu's depth.
+    """
+    menu_depth = menu_ops_config.get("menu_depth", 2)
     
     options = {}
     
     for option_name, option_config in nav_config.items():
+        visibility_depth = option_config["menu_option"]["visibility_depth"]
+    
+        is_clear = option_config["menu_option"]["return_sentinel"] == "clear"
+        is_back = option_config["menu_option"]["return_sentinel"] == "back"
         is_exit = option_config["menu_option"]["return_sentinel"] == "exit"
-        has_entities = (option_config["menu_option"]["return_sentinel"] == "clear") and entity_selected
-        is_deep_enough = option_config["menu_option"]["visibility_depth"] >= menu_depth
+    
+        has_entities =  is_clear and entity_selected
+        is_deep_enough = is_back and visibility_depth >= menu_depth
         
         if is_exit or has_entities or is_deep_enough:
             options[option_name] = option_config
     
     return options
     
-
 
 def generate_participant_options(entity_collection: Union[list, tuple]) -> tuple:
     return (
@@ -106,7 +112,6 @@ def generate_operation_options(operation_collection: dict) -> tuple:
 
 # menu rendering
 
-
 def render_menu(
     menu_options: Union[tuple, dict, list],
     nav_options: Union[list, tuple],
@@ -139,7 +144,6 @@ def handle_menu_input(menu_options: tuple, nav_options: dict) -> str:
 
 
 # validating user input
-
 
 def validate_num_response(options: tuple, response: str) -> bool:
     try:
@@ -188,7 +192,6 @@ def process_alpha_response(menu_response: str) -> Union[str, None]:
 
 # utility functions
 
-
 def fmt_menu_options(menu_options: dict) -> tuple:
     return (
         (
@@ -218,7 +221,7 @@ def generate_nav_option_text(nav_attrs: dict) -> str:
     return f"{selector:<2} {menu_text}"
 
 
-# runner function
+# main function
 
 def run_menu(
     option_type: str,
@@ -236,13 +239,13 @@ def run_menu(
     participant = selected.get("participant")
     participant_name = generate_disp_name(participant, "fresh")
     
-    entity_selected = team != None or participant != None
+    entity_selected = participant or team
     
     print("entity_selected: ", entity_selected)
     print(team, participant); input()
 
     menu_options = generate_menu_options(option_type, entity_collection, operation_collection)
-    nav_options = generate_nav_options(operation_config, NAV_OPS_CONFIG, **selected)
+    nav_options = generate_nav_options(operation_config, NAV_OPS_CONFIG, entity_selected)
     
     render_header(
         operation_config,
