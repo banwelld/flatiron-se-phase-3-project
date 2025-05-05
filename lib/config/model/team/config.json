@@ -1,24 +1,24 @@
 {
     "id": {
+        "req_for_initialization": false,
         "display_text": "ID",
-        "required": false,
         "user_editable": false,
         "validation": {}
     },
     "name": {
+        "req_for_initialization": true,
         "display_text": "name",
-        "required": true,
         "user_editable": true,
         "validation": {
             "validate_as": "name",
             "min_length": 5,
             "max_length": 30,
-            "regex": "[a-zA-Z0-9 '.\\-]"
+            "regex": "^\\b[a-zA-Z0-9 ,'.\\-]+\\b$"
         }
     },
     "participants": {
+        "req_for_initialization": false,
         "display_text": "participants",
-        "required": false,
         "user_editable": false,
         "validation": {
             "validate_as": "list",

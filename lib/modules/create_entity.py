@@ -42,7 +42,7 @@ def generate_attr_config(model: Union[Participant, Team]) -> dict:
     required_attrs = {
         attr_name: value
         for attr_name, value in model.CONFIG.items()
-        if value["required"]
+        if value["req_for_initialization"]
     }
     return required_attrs
 

@@ -148,7 +148,7 @@ def update_existing_instance(item, model, record):
     config_keys = list(model.CONFIG.keys())
 
     for name, attr in model.CONFIG.items():
-        is_required = attr.get("required")
+        is_required = attr.get("req_for_initialization")
         is_editable = attr.get("user_editable")
 
         if not is_required and is_editable:

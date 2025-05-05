@@ -4,7 +4,7 @@
         "option_type": "operation",
         "display": {
             "title": "Operation Selection",
-            "instruction": "What would you like to do? "
+            "instruction": "Select an operation to perform: "
         }
     },
     "team": {

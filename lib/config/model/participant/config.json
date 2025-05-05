@@ -1,41 +1,41 @@
 {
     "id": {
+        "req_for_initialization": false,
         "display_text": "ID",
-        "required": false,
         "user_editable": false,
         "validation": {}
     },
     "first_name": {
+        "req_for_initialization": true,
         "display_text": "first name",
-        "required": true,
         "user_editable": true,
         "validation": {
             "validate_as": "name",
             "min_length": 2,
             "max_length": 20,
-            "regex": "[a-zA-Z '.\\-]"
+            "regex": "^\\b[a-zA-Z '.\\-]+\\b$"
         }
     },
     "last_name": {
+        "req_for_initialization": true,
         "display_text": "last name",
-        "required": true,
         "user_editable": true,
         "validation": {
             "validate_as": "name",
             "min_length": 2,
             "max_length": 30,
-            "regex": "[a-zA-Z '.\\-]"
+            "regex": "^\\b[a-zA-Z '.\\-]+\\b$"
         }
     },
     "birth_date": {
+        "req_for_initialization": true,
         "display_text": "birth date",
-        "required": true,
         "user_editable": false,
         "validation": {
             "validate_as": "date",
             "min_length": null,
             "max_length": null,
-            "regex": "^[0-9]{4}(-[0-9]{2}){2}$"
+            "regex": "^\\d{4}(?:-\\d{2}){2}$"
         }
     }
 }
