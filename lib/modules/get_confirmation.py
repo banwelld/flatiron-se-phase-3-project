@@ -7,7 +7,7 @@ from util.helpers import (
     get_user_input_std,
     clear_cli,
 )
-from modules.warnings import warn_invalid_selection
+from util.warnings import warn_invalid_selection
 from strings.display_messages import YN_PROMPT
 
 
@@ -33,7 +33,7 @@ def validate_confirmation_response(response: str):
 # control flow
 
 
-def get_confirmation(prompt_text: str, do_clear_screen: bool = True) -> bool:
+def main(prompt_text: str, do_clear_screen: bool = True) -> bool:
     if do_clear_screen:
         clear_cli()
 

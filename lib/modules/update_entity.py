@@ -8,7 +8,7 @@ from models.participant import Participant
 from models.team import Team
 from modules.get_attr_value import get_attr_value
 from modules.get_confirmation import get_confirmation
-from modules.user_sentinels import USER_CANCEL
+from util.user_sentinels import USER_CANCEL
 from util.helpers import generate_disp_text
 
 
@@ -28,7 +28,7 @@ def update_attr_and_persist(
 # control flow
 
 
-def update_entity(entity: Union[Participant, Team], attr_name: str) -> None:
+def main(entity: Union[Participant, Team], attr_name: str) -> None:
     try:
         model = type(entity)
         model_type = model.__name__.lower()

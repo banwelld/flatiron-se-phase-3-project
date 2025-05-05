@@ -12,11 +12,11 @@ from modules.create_entity import create_entity
 from modules.delete_entity import delete_entity
 from modules.update_entity import update_entity
 from modules.team_assignment import assign_to_team
-from modules.get_config import (
+from config.get_config import (
     MENU_OPS_CONFIG,
     OPS_CONFIG,
 )
-from modules.user_sentinels import is_cancelled
+from util.user_sentinels import is_cancelled
 from util.helpers import (
     render_result_screen,
     generate_disp_text,

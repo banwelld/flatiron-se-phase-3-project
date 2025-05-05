@@ -3,7 +3,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from modules.get_config import (
+from config.get_config import (
     TEAM_MODEL_CONFIG as MODEL_CONFIG,
     TEAM_TABLE_CONFIG as TABLE_CONFIG,
 )

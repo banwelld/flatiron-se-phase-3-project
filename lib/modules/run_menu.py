@@ -4,12 +4,12 @@ from typing import Union
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from modules.get_config import (
+from config.get_config import (
     OPS_CONFIG,
     MENU_OPS_CONFIG,
     NAV_OPS_CONFIG,
 )
-from modules.warnings import warn_invalid_selection
+from util.warnings import warn_invalid_selection
 from validation.enforcers import enforce_range
 from strings.tint_string import tint_string
 from util.helpers import (
@@ -231,7 +231,7 @@ def generate_nav_option_text(nav_attrs: dict) -> str:
 # control flow
 
 
-def run_menu(
+def main(
     option_type: str,
     clear_selected_func: callable,
     entity_collection: Union[list, tuple] = None,

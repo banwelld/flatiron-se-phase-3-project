@@ -3,8 +3,8 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from modules.user_sentinels import USER_CANCEL
-from modules.get_config import NAV_OPS_CONFIG as NAV_CONFIG
+from util.user_sentinels import USER_CANCEL
+from config.get_config import NAV_OPS_CONFIG as NAV_CONFIG
 from modules.get_confirmation import get_confirmation
 from util.helpers import render_header
 from strings.tint_string import tint_string
@@ -14,7 +14,7 @@ from strings.display_messages import EXIT_MSG, QUIT_PROMPT
 # control flow
 
 
-def quit_program():
+def main():
     render_header(
         NAV_CONFIG["quit_program"]["display"].get("title"),
         None,

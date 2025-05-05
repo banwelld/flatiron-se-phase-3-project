@@ -1,8 +1,8 @@
 from models.participant import Participant
 from models.team import Team
 from modules.get_confirmation import get_confirmation
-from modules.user_sentinels import USER_CANCEL, PROCESS_CANCEL
-from modules.warnings import warn_team_full
+from util.user_sentinels import USER_CANCEL, PROCESS_CANCEL
+from util.warnings import warn_team_full
 from util.helpers import generate_disp_text
 from validation.enforcers import ensure_team_has_room
 
@@ -17,13 +17,13 @@ def reassign_all_participants(source_team: Team, destination_team: Team) -> None
     team. Suppresses user confirmation for the operation.
     """
     for p in list(source_team.participants):
-        assign_to_team(p, destination_team, source_team, do_confirm=False)
+        main(p, destination_team, source_team, do_confirm=False)
 
 
 # control flow
 
 
-def assign_to_team(
+def main(
     participant: Participant,
     destination_team: Team,
     source_team: Team = None,

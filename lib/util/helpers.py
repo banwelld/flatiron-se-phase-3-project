@@ -2,8 +2,8 @@ import os
 from typing import Union
 from models.participant import Participant
 from models.team import Team
-from modules.get_config import OPS_CONFIG
-from modules.user_sentinels import (
+from config.get_config import OPS_CONFIG
+from util.user_sentinels import (
     USER_CANCEL,
     USER_CLEAR,
 )

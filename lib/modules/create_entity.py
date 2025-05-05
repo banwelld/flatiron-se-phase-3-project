@@ -9,7 +9,7 @@ from models.team import Team
 from util.helpers import fmt_participant_name, generate_disp_text
 from modules.get_confirmation import get_confirmation
 from modules.get_attr_value import get_attr_value
-from modules.user_sentinels import USER_CANCEL
+from util.user_sentinels import USER_CANCEL
 
 
 # user input collection and validation
@@ -50,7 +50,7 @@ def generate_attr_config(model: Union[Participant, Team]) -> dict:
 # control flow
 
 
-def create_entity(model: Union[Participant, Team]) -> Union[Participant, Team]:
+def main(model: Union[Participant, Team]) -> Union[Participant, Team]:
     """
     Collects data necessary for instantiating a participant or team, gets user confirmation
     and - if the user chooses "y" - instantiates the entity. If user selects "n" in the

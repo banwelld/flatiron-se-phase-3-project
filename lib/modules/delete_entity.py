@@ -8,14 +8,14 @@ from models.participant import Participant
 from models.team import Team
 from modules.get_confirmation import get_confirmation
 from modules.team_assignment import reassign_all_participants
-from modules.user_sentinels import USER_CANCEL
+from util.user_sentinels import USER_CANCEL
 from util.helpers import get_model_type, generate_disp_text
 
 
 # control flow
 
 
-def delete_entity(entity: Union[Participant, Team], destination_team: Team = None):
+def main(entity: Union[Participant, Team], destination_team: Team = None):
     """
     Confirms user's intent and deletes the selected entity of the specified model
     type with confirmation. If user cancels, sends the back sentinel to the caller.
