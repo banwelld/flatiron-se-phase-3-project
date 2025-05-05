@@ -12,7 +12,7 @@ from modules.user_sentinels import USER_CANCEL
 from util.helpers import get_model_type, generate_disp_text
 
 
-# operational control flow
+# control flow
 
 
 def delete_entity(entity: Union[Participant, Team], destination_team: Team = None):
@@ -23,13 +23,11 @@ def delete_entity(entity: Union[Participant, Team], destination_team: Team = Non
     all participants from the team and makes them free agents.
     """
     entity_name = generate_disp_text(entity)
+    entity_type = get_model_type(entity)
 
     if not get_confirmation(
-        f"Delete selected {get_model_type(entity)}: {entity_name}?"
+        f"Delete selected {entity_type}: {entity_name}?"
     ):
-        from cli import selected_entities
-
-        selected_entities.reset()
         return USER_CANCEL
 
     if isinstance(entity, Participant):

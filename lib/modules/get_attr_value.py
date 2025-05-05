@@ -28,7 +28,7 @@ def prompt_for_attr_value(
     return get_user_input_std(prompt_text)
 
 
-# operational control flow
+# control flow
 
 
 def get_attr_value(

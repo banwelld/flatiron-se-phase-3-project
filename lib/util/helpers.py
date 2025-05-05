@@ -8,7 +8,7 @@ from modules.user_sentinels import (
     USER_CLEAR,
 )
 from strings.tint_string import tint_string
-from strings.user_messages import (
+from strings.display_messages import (
     HIT_ENTER,
     APP_TITLE,
     NONE_SELECTED,
@@ -26,9 +26,11 @@ def get_action_msg(operation_name: str) -> str:
     )
 
 
-def print_collection(collection: Union[list, tuple]):
+def print_collection(collection: Union[list, tuple], new_line_after: bool = True):
     for item in collection:
         print(item)
+    if new_line_after:
+        print()
 
 
 def fmt_participant_name(first_name: str, last_name: str) -> str:
@@ -60,9 +62,6 @@ def find_entity_in_list(entities: list, entity_id: int) -> Union[Participant, Te
 
 
 def generate_success_msg(disp_name: str, operation: str) -> str:
-    """
-    Generates a success message for the specified action on the given item.
-    """
     action_msg = get_action_msg(operation)
     action_clause = tint_string("oops", f"{action_msg.upper()}")
     message = f"{disp_name} : {action_clause}"
@@ -95,7 +94,6 @@ def process_nav_response(
     Returns the USER_CANCEL_SENTINEL if the entity is not the EXIT_SENTINEL.
     """
     from modules.quit_program import quit_program
-    from cli import selected_entities
 
     if response == "exit":
         return quit_program()

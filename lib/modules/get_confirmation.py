@@ -8,7 +8,7 @@ from util.helpers import (
     clear_cli,
 )
 from modules.warnings import warn_invalid_selection
-from strings.user_messages import YN_PROMPT
+from strings.display_messages import YN_PROMPT
 
 
 # ui rendering
@@ -30,7 +30,7 @@ def validate_confirmation_response(response: str):
     return False
 
 
-# operational control flow
+# control flow
 
 
 def get_confirmation(prompt_text: str, do_clear_screen: bool = True) -> bool:

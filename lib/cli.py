@@ -22,7 +22,7 @@ from util.helpers import (
     generate_disp_text,
     render_header,
 )
-from strings.user_messages import NONE_SELECTED
+from strings.display_messages import NONE_SELECTED
 
 
 # load all teams
@@ -238,7 +238,7 @@ def run_operation(
     return operation_func()
 
 
-# Application's main control flow
+# control flow
 
 
 def main():

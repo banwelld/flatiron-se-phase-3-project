@@ -40,14 +40,14 @@ def generate_attr_config(model: Union[Participant, Team]) -> dict:
     Generates a dictionary of attributes required for the instantiation of a model.
     """
     required_attrs = {
-        attr_name: value
-        for attr_name, value in model.CONFIG.items()
-        if value["req_for_initialization"]
+        attr_name: attr_val
+        for attr_name, attr_val in model.CONFIG.items()
+        if attr_val["req_for_initialization"]
     }
     return required_attrs
 
 
-# operation control flow
+# control flow
 
 
 def create_entity(model: Union[Participant, Team]) -> Union[Participant, Team]:
@@ -57,24 +57,19 @@ def create_entity(model: Union[Participant, Team]) -> Union[Participant, Team]:
     confirmation process or hits CRTL + C returns the escape sentinel to cancel the
     operation immediately.
     """
-    from cli import selected_entities
-
     try:
         model_type = model.__name__.lower()
         attr_values = collect_instantiation_data(model, model_type)
 
         if model_type == "participant":
-            entity_name = generate_disp_text(
-                fmt_participant_name(
-                    attr_values.get("first_name"),
-                    attr_values.get("last_name"),
-                )
+            entity_name = fmt_participant_name(
+                attr_values.get("first_name"), attr_values.get("last_name")
             )
+            entity_disp_name = generate_disp_text(entity_name)
         else:
-            entity_name = generate_disp_text(attr_values.get("name"))
+            entity_disp_name = generate_disp_text(attr_values.get("name"))
 
-        if not get_confirmation(f"Create {model_type}: {entity_name}?"):
-            selected_entities.reset()
+        if not get_confirmation(f"Create {model_type}: {entity_disp_name}?"):
             return USER_CANCEL
 
         return model.create(**attr_values)

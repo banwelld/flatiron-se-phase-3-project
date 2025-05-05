@@ -62,14 +62,14 @@ def generate_nav_options(
     options = {}
 
     for option_name, option_config in nav_config.items():
-        visibility_depth = option_config["menu_option"]["visibility_depth"]
+        vis_depth = option_config["menu_option"]["vis_depth"]
 
         is_clear = option_config["menu_option"]["return_sentinel"] == "clear"
         is_back = option_config["menu_option"]["return_sentinel"] == "back"
         is_exit = option_config["menu_option"]["return_sentinel"] == "exit"
 
         has_entities = is_clear and entity_selected
-        is_deep_enough = is_back and menu_depth >= visibility_depth
+        is_deep_enough = is_back and menu_depth >= vis_depth
 
         if is_exit or has_entities or is_deep_enough:
             options[option_name] = option_config
@@ -121,9 +121,7 @@ def render_menu(
     nav_options: Union[list, tuple],
 ):
     print_collection(fmt_menu_options(menu_options))
-    print()
     print_collection(fmt_nav_options(nav_options))
-    print()
 
 
 # handling user input
@@ -138,6 +136,7 @@ def handle_menu_input(menu_options: tuple, nav_options: dict) -> str:
     while not close_menu:
         response = get_user_input_std("Enter your selection: ")
 
+        # validate user input if non-empty string or int > 0
         if response.isdigit() and int(response) >= 0:
             close_menu = validate_num_response(menu_options, response)
         elif isinstance(response, str) and len(response) == 1:
@@ -229,7 +228,7 @@ def generate_nav_option_text(nav_attrs: dict) -> str:
     return f"{selector:<2} {menu_text}"
 
 
-# operational control flow
+# control flow
 
 
 def run_menu(

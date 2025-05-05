@@ -8,10 +8,10 @@ from modules.get_config import NAV_OPS_CONFIG as NAV_CONFIG
 from modules.get_confirmation import get_confirmation
 from util.helpers import render_header
 from strings.tint_string import tint_string
-from strings.user_messages import EXIT_MSG, QUIT_PROMPT
+from strings.display_messages import EXIT_MSG, QUIT_PROMPT
 
 
-# operational control flow
+# control flow
 
 
 def quit_program():
@@ -26,5 +26,5 @@ def quit_program():
         return USER_CANCEL
 
     print()
-    print(tint_string("title", EXIT_MSG))
+    print(tint_string("title", EXIT_MSG) + "\n")
     exit()

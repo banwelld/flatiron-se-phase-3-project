@@ -1,7 +1,7 @@
 {
     "back_to_menu": {
         "menu_option": {
-            "visibility_depth": 2,
+            "vis_depth": 2,
             "format": "ask",
             "selectors": ["m"],
             "return_sentinel": "back"
@@ -14,7 +14,7 @@
     },
     "clear_selected": {
         "menu_option": {
-            "visibility_depth": 2,
+            "vis_depth": 2,
             "format": "nope",
             "selectors": ["c"],
             "return_sentinel": "clear"
@@ -27,7 +27,7 @@
     },
     "quit_program": {
         "menu_option": {
-            "visibility_depth": 1,
+            "vis_depth": 1,
             "format": "angry",
             "selectors": ["x", "q"],
             "return_sentinel": "exit"

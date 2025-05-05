@@ -1,5 +1,5 @@
 from util.helpers import render_warning
-from strings.user_messages import (
+from strings.display_messages import (
     INVALID_SELECTION,
     INVALID_NAME_CHAR,
     INVALID_NAME_LEN,

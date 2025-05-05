@@ -25,7 +25,7 @@ def update_attr_and_persist(
     entity.update()
 
 
-# operational control flow
+# control flow
 
 
 def update_entity(entity: Union[Participant, Team], attr_name: str) -> None:
@@ -41,9 +41,6 @@ def update_entity(entity: Union[Participant, Team], attr_name: str) -> None:
         if not get_confirmation(
             f"Update {model_type} {attr_disp_text} to {new_value_disp_text}?"
         ):
-            from cli import selected_entities
-
-            selected_entities.reset()
             return USER_CANCEL
 
         update_attr_and_persist(entity, attr_name, new_value)
