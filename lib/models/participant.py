@@ -27,16 +27,17 @@ class Participant:
         first_name: str,
         last_name: str,
         birth_date: str,
+        id: int = None
     ):
 
         self.first_name = first_name
         self.last_name = last_name
         self.birth_date = birth_date
         self.team_id = None
-        self.id = None
+        self.id = id
 
     def __repr__(self):
-        return f"{self.last_name}, {self.first_name}"
+        return f"<<PARTICIPANT: {self.last_name.upper()}, {self.first_name} (id {self.id})>>"
 
     @property
     def first_name(self):
@@ -155,8 +156,5 @@ class Participant:
         Returns the team associated with the participant.
         """
         from models.team import Team
-
-        for t in Team.all:
-            if t.id == self.team_id:
-                return t
-        return None
+        my_team = Team.fetch(self.team_id)
+        return next(my_team, None)

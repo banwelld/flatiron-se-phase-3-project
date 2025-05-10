@@ -37,5 +37,11 @@
             "max_length": null,
             "regex": "^\\d{4}(?:-\\d{2}){2}$"
         }
+    },
+    "team_id": {
+        "req_for_init": false,
+        "display_text": "team id",
+        "user_editable": false,
+        "validation": {}
     }
 }
