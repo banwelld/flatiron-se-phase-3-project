@@ -3,10 +3,6 @@ from typing import Union
 from models.participant import Participant
 from models.team import Team
 from config.get_config import OPS_CONFIG
-from util.user_sentinels import (
-    USER_CANCEL,
-    USER_CLEAR,
-)
 from strings.tint_string import tint_string
 from strings.display_messages import (
     HIT_ENTER,
@@ -17,96 +13,40 @@ from strings.display_messages import (
 )
 
 
-# helper functions
-
-
-def get_action_msg(operation_name: str) -> str:
-    return OPS_CONFIG[operation_name]["display"].get(
-        "action_message", "ACTION_MESSAGE_NOT_AVAILABLE"
-    )
-
-
-def print_collection(collection: Union[list, tuple], new_line_after: bool = True):
-    for item in collection:
-        print(item)
-    if new_line_after:
-        print()
-
-
-def fmt_participant_name(first_name: str, last_name: str) -> str:
-    if first_name is None or last_name is None:
-        return ""
-    return f"{last_name.upper()}, {first_name}"
-
-
 def clear_cli():
     os.system("cls" if os.name == "nt" else "clear")
 
 
-def generate_title(text: str) -> str:
-    formatted_text = "" if not text else f" - {text}"
-    title = f"*** {APP_TITLE}{formatted_text} ***"
-    return title
-
-
-def get_user_input_std(prompt_text: str) -> str:
-    return input(tint_string("ask", f"\n{prompt_text}"))
-
-
-def get_model_type(entity: Union[Participant, Team]) -> str:
-    return type(entity).__name__.lower()
-
-
-def find_entity_in_list(entities: list, entity_id: int) -> Union[Participant, Team]:
-    return next((e for e in entities if e.id == entity_id), None)
-
-
-def generate_success_msg(disp_name: str, operation: str) -> str:
-    action_msg = get_action_msg(operation)
-    action_clause = tint_string("oops", f"{action_msg.upper()}")
-    message = f"{disp_name} : {action_clause}"
-    return message
-
-
 def generate_disp_text(
-    text_or_entity: Union[Participant, Team, str, None], tint_name: str = "fresh"
+    str_or_entity: Union[Participant, Team, str], tint_name: str = "fresh"
 ) -> str:
-    result = NONE_SELECTED
-    if isinstance(text_or_entity, Participant):
-        participant_name = fmt_participant_name(
-            text_or_entity.first_name, text_or_entity.last_name
-        )
-        result = tint_string(tint_name, participant_name)
-    elif isinstance(text_or_entity, Team):
-        result = tint_string(tint_name, text_or_entity.name)
-    elif isinstance(text_or_entity, str) and text_or_entity != NONE_SELECTED:
-        result = tint_string(tint_name, text_or_entity)
-
-    return result
-
-
-def process_nav_response(
-    response: str, clear_selected_func: callable
-) -> Union[object, None]:
     """
-    Returns quit_program() if the entity is the EXIT_SENTINEL.
-    Clears the selected entities if the entity is the CLEAR_SENTINEL.
-    Returns the USER_CANCEL_SENTINEL if the entity is not the EXIT_SENTINEL.
+    Takes in a string, a participant, or a team and returns a formatted version of the
+    string or the entity name for display in the CLI. Participant names are formatted
+    as "LAST, First", while team names and strings receive no positional formatting. 
     """
-    from modules.quit_program import quit_program
-
-    if response == "exit":
-        return quit_program()
-
-    elif response == "clear":
-        clear_selected_func()
-        return USER_CLEAR
-
-    else:
-        return USER_CANCEL
+    arg_type_map = {
+        "participant": tint_string(tint_name, f"{str_or_entity.last_name.upper()}, {str_or_entity.first_name}"),
+        "team": tint_string(tint_name, str_or_entity.name),
+        "str": tint_string(tint_name, str_or_entity)
+    }
+    return arg_type_map.get(type(str_or_entity).__name__, NONE_SELECTED)
 
 
-# cli rendering functions
+def get_input_with_prompt(prompt_text: str) -> str:
+    return input(generate_disp_text(f"\n{prompt_text}"), "ask")
+
+
+def render_menu(menu_options: tuple, nav_options: tuple):
+    """
+    Concatenates the provided option collections into a list with an empty string
+    separating the menu options for the nav options. Prints all options formatted
+    with selectors (op[0]) preceding option descriptions (op[1]), leaving a blank
+    line (empty string) between the option types with the help of the empty string.
+    """
+    all_options = list(menu_options) + [""] + list(nav_options)
+    for op in all_options:
+        print(op if isinstance(op, str) else f"{op[0]:<2} {op[1]}")
 
 
 def render_header(
@@ -114,74 +54,62 @@ def render_header(
     instruction: str,
     participant_name: str = None,
     team_name: str = None,
-    entity_selected: bool = True,
     ctrl_c_cancel: bool = True,
 ) -> None:
     clear_cli()
 
-    render_title(operation_name)
+    # render the page title with the operation name as a suffix to the app name
+    title_text = f"*** {APP_TITLE.upper()} - {operation_name.upper()} ***"
+    print(generate_disp_text(title_text, "title"))
+    print(f"{generate_disp_text('=' * len(title_text))}\n\n", 'title')
 
+    # conditionally render header components if they're needed
     if ctrl_c_cancel:
-        print(CANCEL_INSTRUCTION)
-        print("\n")
-
-    if entity_selected:
-        render_selected_entities_table(
-            participant_name or NONE_SELECTED, team_name or NONE_SELECTED
-        )
-
+        print(f"{CANCEL_INSTRUCTION}\n\n")
+    if participant_name or team_name:
+        print(f"{generate_disp_text('CURRENTLY SELECTED', 'prompt')}")
+        print(f"{generate_disp_text('-' * 50, 'prompt')}")
+    if participant_name:
+        print(f"{generate_disp_text('Participant:', 'prompt'):>12} {participant_name}")
+        print(f"{generate_disp_text('-' * 50, 'prompt')}")
+    if team_name:
+        print(f"{generate_disp_text('Team:', 'prompt'):>12} {team_name}")
+        print(f"{generate_disp_text('-' * 50, 'prompt')}")
     if instruction:
-        render_instruction(instruction)
+        print(f"{generate_disp_text(instruction, "plain")}\n\n")
 
 
-def render_title(operation_name: str):
-    title = generate_title(operation_name).upper()
-    print(tint_string("title", title.upper()))
-    print(tint_string("title", "=" * len(title)))
-    print()
-
-
-def render_instruction(instruction: str, color_key: str = "plain"):
-    print(tint_string(color_key, instruction))
-    print()
-
-
-def render_selected_entities_table(participant_name: str, team_name: str):
-    line = "-" * 50
-    print(f"{tint_string('prompt', 'CURRENTLY SELECTED')}")
-    print(f"{tint_string('prompt', line)}")
-    if participant_name != "None Selected":
-        print(f"{tint_string('prompt', 'Participant:')} {participant_name}")
-        print(f"{tint_string('prompt', line)}")
-    if team_name != NONE_SELECTED:
-        print(f"{tint_string('prompt', 'Team:')} {team_name}")
-        print(f"{tint_string('prompt', line)}")
-    print()
-
-
-def render_result_screen(entity_name: str, operation: str):
+def render_result_screen(entity_disp_name: str, operation_name: str):
     """
     Clears the console and displays a standardized success message for a specified
     entity and action and prompts the user to continue.
     """
-    if isinstance(entity_name, str):
-        message = generate_success_msg(entity_name, operation)
+    if isinstance(entity_disp_name, str):
+        # append the operation's action message to the entity's display name
+        success_str = OPS_CONFIG[operation_name].get("success_msg")
+        success_disp_str = generate_disp_text(f"{success_str.upper()}", "oops")
+        message = f"{entity_disp_name} : {success_disp_str}"
     else:
-        message = OP_CANCELLED
+        op_disp_name = generate_disp_text(operation_name, "option")
+        cancel_disp_str = generate_disp_text(OP_CANCELLED, "oops")
+        message = f"{op_disp_name} : {cancel_disp_str}"
 
     clear_cli()
-
-    print(message)
-    print()
-    input(tint_string("plain", HIT_ENTER))
-
+    print(f"{message}\n\n")
+    input(generate_disp_text(HIT_ENTER, "plain"))
+    
 
 def render_warning(warning_msg: str, enter_to_continue: bool = False):
     """
     Generates standardized warning messages to user in "oops" yellow from provided text.
     """
-    print()
-    print(tint_string("oops", warning_msg))
-    print("\n")
+    print(f"\n{generate_disp_text(warning_msg, 'oops')}\n\n")
     if enter_to_continue:
-        input(tint_string("plain", HIT_ENTER))
+        input(generate_disp_text(HIT_ENTER, "plain"))
+
+
+def render_team_participant_list(state: dict):
+    print(generate_disp_text(f"{state['team'].upper()} PARTICIPANTS\n\n", "ask"))
+    for p in state["team_participants"]:
+        print(generate_disp_text(p), "option")
+    print("\n")

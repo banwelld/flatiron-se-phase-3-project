@@ -1,12 +1,12 @@
 {
     "id": {
-        "req_for_initialization": false,
+        "req_for_init": false,
         "display_text": "ID",
         "user_editable": false,
         "validation": {}
     },
     "name": {
-        "req_for_initialization": true,
+        "req_for_init": true,
         "display_text": "name",
         "user_editable": true,
         "validation": {
@@ -17,7 +17,7 @@
         }
     },
     "participants": {
-        "req_for_initialization": false,
+        "req_for_init": false,
         "display_text": "participants",
         "user_editable": false,
         "validation": {

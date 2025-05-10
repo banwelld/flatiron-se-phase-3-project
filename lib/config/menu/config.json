@@ -1,26 +1,17 @@
 {
     "operation": {
-        "menu_depth": 1,
         "option_type": "operation",
-        "display": {
-            "title": "Operation Selection",
-            "instruction": "Select an operation to perform: "
-        }
+        "title_suffix": "Operation Selection",
+        "instruction": "Select an operation to perform: "
     },
     "team": {
-        "menu_depth": 2,
         "option_type": "model",
-        "display": {
-            "title": "Team Selection",
-            "instruction": "Select a team: "
-        }
+        "title_suffix": "Team Selection",
+        "instruction": "Select a team: "
     },
     "participant": {
-        "menu_depth": 2,
         "option_type": "model",
-        "display": {
-            "title": "Participant Selection",
-            "instruction": "Select a Participant: "
-        }
+        "title_suffix": "Participant Selection",
+        "instruction": "Select a Participant: "
     }
 }

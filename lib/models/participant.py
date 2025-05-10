@@ -20,11 +20,7 @@ from util.db_helpers import (
 
 
 class Participant:
-    #  configuration
-
     CONFIG = MODEL_CONFIG
-
-    # constructor
 
     def __init__(
         self,
@@ -40,8 +36,6 @@ class Participant:
 
     def __repr__(self):
         return f"{self.last_name}, {self.first_name}"
-
-    #  properties
 
     @property
     def first_name(self):
@@ -70,8 +64,6 @@ class Participant:
     def birth_date(self, birth_date):
         self._birth_date = birth_date
 
-    # class methods
-
     @classmethod
     def build_table(cls):
         """
@@ -98,9 +90,7 @@ class Participant:
         none exists.
         """
         cls.build_table()
-        participant = Participant(first_name, last_name, birth_date)
-        participant.save()
-        return participant
+        return Participant(first_name, last_name, birth_date)
 
     @classmethod
     def fetch_all(cls, team_id: int = None):
@@ -112,8 +102,6 @@ class Participant:
         """
         db_data = select_all_rows(TABLE_CONFIG, team_id)
         return [parse_db_row(cls, row) for row in db_data]
-
-    # instance methods
 
     def save(self):
         """
@@ -162,7 +150,7 @@ class Participant:
 
     def team(self):
         """
-        Returns the team name associated with the participant.
+        Returns the team associated with the participant.
         """
         from models.team import Team
 

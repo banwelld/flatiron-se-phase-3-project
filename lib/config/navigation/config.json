@@ -1,41 +1,14 @@
 {
-    "back_to_menu": {
-        "menu_option": {
-            "vis_depth": 2,
-            "format": "ask",
-            "selectors": ["m"],
-            "return_sentinel": "back"
-        },
-        "display": {
-            "title": null,
-            "menu_text": "Main Menu",
-            "show_selected_entities": false
-        }
+    "back": {
+        "format": "ask",
+        "menu_text": "Back to last step"
     },
-    "clear_selected": {
-        "menu_option": {
-            "vis_depth": 2,
-            "format": "nope",
-            "selectors": ["c"],
-            "return_sentinel": "clear"
-        },
-        "display": {
-            "title": null,
-            "menu_text": "Main Menu and Clear All Selected",
-            "show_selected_entities": false
-        }
+    "reset": {
+        "format": "nope",
+        "menu_text": "Reset to Main Manu"
     },
-    "quit_program": {
-        "menu_option": {
-            "vis_depth": 1,
-            "format": "angry",
-            "selectors": ["x", "q"],
-            "return_sentinel": "exit"
-        },
-        "display": {
-            "title": "Exit Application",
-            "menu_text": "Exit the Application",
-            "show_selected_entities": false
-        }
+    "quit": {
+        "format": "angry",
+        "menu_text": "Quit the application"
     }
 }

@@ -1,6 +1,8 @@
 from __init__ import CURSOR, CONN
 
-# standard database operations
+
+def find_entity_in_list(entities: list, entity_id: int):
+    return next((e for e in entities if e.id == entity_id), None)
 
 
 def create_table(table_def: dict):
@@ -117,8 +119,6 @@ def parse_db_row(model: type, record: list):
 
     Returns the item instance.
     """
-    from util.helpers import find_entity_in_list
-
     repository = get_repository(model, record)
 
     if item := find_entity_in_list(repository, record[0]):
@@ -134,7 +134,6 @@ def parse_db_row(model: type, record: list):
 
 
 def get_repository(model, record):
-    from util.helpers import find_entity_in_list
     from models.participant import Participant
     from models.team import Team
 
@@ -148,7 +147,7 @@ def update_existing_instance(item, model, record):
     config_keys = list(model.CONFIG.keys())
 
     for name, attr in model.CONFIG.items():
-        is_required = attr.get("req_for_initialization")
+        is_required = attr.get("req_for_init")
         is_editable = attr.get("user_editable")
 
         if not is_required and is_editable:

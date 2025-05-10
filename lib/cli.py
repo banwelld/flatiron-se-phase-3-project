@@ -7,16 +7,16 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 from models.participant import Participant
 from models.team import Team
 from classes.session_state import SessionState
-from modules.run_menu import run_menu
-from modules.create_entity import create_entity
-from modules.delete_entity import delete_entity
-from modules.update_entity import update_entity
-from modules.team_assignment import assign_to_team
+from lib.modules.process_menu_response import main as run_menu
+from modules.create_entity import main as create_entity
+from lib.modules.delete_entity_prep import main as delete_entity
+from modules.update_entity import main as update_entity
+from modules.team_assignment import main as assign_to_team
 from config.get_config import (
     MENU_OPS_CONFIG,
     OPS_CONFIG,
 )
-from util.user_sentinels import is_cancelled
+from lib.util.nav_sentinels import is_cancelled
 from util.helpers import (
     render_result_screen,
     generate_disp_text,
@@ -225,14 +225,14 @@ def run_operation(
     participant_selected = participant_disp_name != NONE_SELECTED
     team_selected = team_disp_name != NONE_SELECTED
 
-    entity_selected = participant_selected or team_selected
+    participant_or_team_in_state = participant_selected or team_selected
 
     render_header(
         operation_name,
         instruction,
         participant_disp_name,
         team_disp_name,
-        entity_selected,
+        participant_or_team_in_state,
         is_cancelable,
     )
     return operation_func()
@@ -260,8 +260,7 @@ def main():
 
         # unpack operations config to variables
         selection_config = OPS_CONFIG[selection]
-        display_config = selection_config.get("display")
-        operation_name = display_config.get("title", "")
+        operation_name = selection_config.get("title_suffix", "")
 
         # if operation requires a team, ensure that selected_entities has one
         if selection_config.get("resolve_team"):
@@ -318,7 +317,7 @@ def main():
         result = run_operation(
             operation_func,
             operation_name,
-            display_config.get("instruction", ""),
+            selection_config.get("instruction", ""),
             participant_name,
             team_name,
         )

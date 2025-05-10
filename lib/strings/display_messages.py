@@ -26,6 +26,6 @@ NONE_SELECTED = "None Selected"
 
 OP_CANCELLED = "Operation cancelled."
 
-CANCEL_INSTRUCTION = "* <Ctrl + C> to cancel and return to the main menu *"
+CANCEL_INSTRUCTION = "<Ctrl + C> to cancel and return to the previous menu"
 
 QUIT_PROMPT = "Are you sure you want to end your session?"

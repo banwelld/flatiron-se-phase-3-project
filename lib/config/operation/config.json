@@ -1,119 +1,74 @@
 {
     "create_team": {
-        "resolve_team": false,
+        "title_suffix": "New Team",
+        "menu_text": "Create a New Team",
+        "instruction": "Please enter a value for each of the requested details.",
+        "success_msg": "Team created",
         "resolve_participant": false,
-        "retain_sel_team": true,
-        "retain_sel_participant": false,
-        "load_free_agents": false,
-        "display": {
-            "title": "New Team",
-            "menu_text": "Create a New Team",
-            "instruction": "Please enter a value for each of the requested details.",
-            "action_message": "Team created"
-        }
+        "load_free_agents": false
     },
     "create_participant": {
-        "resolve_team": true,
+        "title_suffix": "New Participant",
+        "menu_text": "Add a New Participant",
+        "instruction": "Please enter a value for each of the requested details.",
+        "success_msg": "Participant created",
         "resolve_participant": false,
-        "retain_sel_team": true,
-        "retain_sel_participant": false,
-        "load_free_agents": false,
-        "display": {
-            "title": "New Team Member",
-            "menu_text": "Create a New Team Member",
-            "instruction": "Please enter a value for each of the requested details.",
-            "action_message": "Participant created"
-        }
+        "load_free_agents": false
     },
     "recruit_free_agent": {
-        "resolve_team": true,
+        "title_suffix": "Recruit Free Agent",
+        "menu_text": "Recruit Free Agent to Team",
+        "instruction": null,
+        "success_msg": "Participant added to team",
         "resolve_participant": true,
-        "retain_sel_team": true,
-        "retain_sel_participant": false,
-        "load_free_agents": true,
-        "display": {
-            "title": "Recruit Free Agent",
-            "menu_text": "Recruit Free Agent to Team",
-            "instruction": null,
-            "action_message": "Participant added to team"
-        }
+        "load_free_agents": true
     },
     "remove_participant": {
-        "resolve_team": true,
+        "title_suffix": "Remove Participant",
+        "menu_text": "Remove Participant from Team",
+        "instruction": null,
+        "success_msg": "Participant removed from team",
         "resolve_participant": true,
-        "retain_sel_team": false,
-        "retain_sel_participant": true,
-        "load_free_agents": true,
-        "display": {
-            "title": "Remove Participant",
-            "menu_text": "Remove Participant from Team",
-            "instruction": null,
-            "action_message": "Participant removed from team"
-        }
+        "load_free_agents": true
     },
     "delete_participant": {
-        "resolve_team": true,
+        "title_suffix": "Delete Participant",
+        "menu_text": "Delete Participant Record",
+        "instruction": null,
+        "success_msg": "Participant deleted",
         "resolve_participant": true,
-        "retain_sel_team": true,
-        "retain_sel_participant": false,
-        "load_free_agents": false,
-        "display": {
-            "title": "Delete Participant",
-            "menu_text": "Delete Participant Record",
-            "instruction": null,
-            "action_message": "Participant deleted"
-        }
+        "load_free_agents": false
     },
     "delete_team": {
-        "resolve_team": true,
+        "title_suffix": "Delete Team",
+        "menu_text": "Delete Team Record",
+        "instruction": null,
+        "success_msg": "Team deleted and participants (if any) added to free agents",
         "resolve_participant": false,
-        "retain_sel_team": false,
-        "retain_sel_participant": false,
-        "load_free_agents": true,
-        "display": {
-            "title": "Delete Team",
-            "menu_text": "Delete Team Record",
-            "instruction": null,
-            "action_message": "Team deleted and participants (if any) added to free agents"
-        }
+        "load_free_agents": true
     },
     "update_participant_first_name": {
-        "resolve_team": true,
+        "title_suffix": "Update First Name",
+        "menu_text": "Update Participant First Name",
+        "instruction": "Please enter the participant's new first name.",
+        "success_msg": "Participant first name updated",
         "resolve_participant": true,
-        "retain_sel_team": false,
-        "retain_sel_participant": false,
-        "load_free_agents": false,
-        "display": {
-            "title": "Update First Name",
-            "menu_text": "Update Participant First Name",
-            "instruction": "Please enter the participant's new first name.",
-            "action_message": "Participant first name updated"
-        }
+        "load_free_agents": false
     },
     "update_participant_last_name": {
-        "resolve_team": true,
+        "title_suffix": "Update Last Name",
+        "menu_text": "Update Participant Last Name",
+        "instruction": "Please enter the participant's new last name.",
+        "success_msg": "Participant last name updated",
         "resolve_participant": true,
-        "retain_sel_team": false,
-        "retain_sel_participant": false,
-        "load_free_agents": false,
-        "display": {
-            "title": "Update Last Name",
-            "menu_text": "Update Participant Last Name",
-            "instruction": "Please enter the participant's new last name.",
-            "action_message": "Participant last name updated"
-        }
+        "load_free_agents": false
     },
     "update_team_name": {
-        "resolve_team": true,
+        "title_suffix": "Update Team Name",
+        "menu_text": "Update Team Name",
+        "instruction": "Please enter the team's new name.",
+        "success_msg": "Team name updated",
         "resolve_participant": false,
-        "retain_sel_team": false,
-        "retain_sel_participant": false,
-        "load_free_agents": false,
-        "display": {
-            "title": "Update Team Name",
-            "menu_text": "Update Team Name",
-            "instruction": "Please enter the team's new name.",
-            "action_message": "Team name updated"
-        }
+        "load_free_agents": false
     }
 }

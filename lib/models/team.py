@@ -20,15 +20,9 @@ from util.db_helpers import (
 
 
 class Team:
-    #  configuration
-
     CONFIG = MODEL_CONFIG
 
-    # cache of all teams
-
     all = []
-
-    # constructor
 
     def __init__(
         self,
@@ -43,8 +37,6 @@ class Team:
     def __repr__(self):
         return self.name
 
-    # properties
-
     @property
     def name(self):
         return self._name
@@ -53,8 +45,6 @@ class Team:
     @validate_name("team", "name")
     def name(self, name):
         self._name = name
-
-    # class methods
 
     @classmethod
     def build_table(cls):
@@ -81,7 +71,6 @@ class Team:
         """
         cls.build_table
         team = cls(name, is_free_agents)
-        team.save()
         return team
 
     @classmethod
@@ -93,8 +82,6 @@ class Team:
         db_data = select_all_rows(TABLE_CONFIG)
         result = [parse_db_row(cls, row) for row in db_data]
         return result
-
-    # instance methods
 
     def save(self):
         """
