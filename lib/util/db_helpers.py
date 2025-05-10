@@ -111,61 +111,10 @@ def update_row(table_def: dict, id: int, **updates):
 def parse_db_row(model: type, record: list):
     """
     Using a record from either the participants or teams table,
-    checks if an instance exists in the appropriate repository. If so,
-    overwrites the existing instance's attributes and returns early.
-    If no matching instance in repository, matches the the database
-    record, then instantiates new instance from the record's data and
-    adds it to the repository.
-
-    Returns the item instance.
+    instantiates new team or participant instance from the record's
+    data and returns it.
     """
-    repository = get_repository(model, record)
-
-    if item := find_entity_in_list(repository, record[0]):
-        update_existing_instance(item, model, record)
-        return item
-
-    item = create_instance(model, record)
-    repository.append(item)
-    return item
-
-
-# utility functions for parse_db_row
-
-
-def get_repository(model, record):
-    from models.participant import Participant
-    from models.team import Team
-
-    if model is Participant:
-        team = find_entity_in_list(Team.all, record[-1])
-        return team.participants
-    return Team.all
-
-
-def update_existing_instance(item, model, record):
-    config_keys = list(model.CONFIG.keys())
-
-    for name, attr in model.CONFIG.items():
-        is_required = attr.get("req_for_init")
-        is_editable = attr.get("user_editable")
-
-        if not is_required and is_editable:
-            continue
-
-        attr_index = config_keys.index(name)
-
-        if attr_index >= len(record) - 1:
-            continue
-
-        value = record[attr_index]
-        setattr(item, name, value)
-
-
-def create_instance(model, record):
-    field_list = (
-        tuple(record[1:]) if model.__name__.lower() == "team" else tuple(record[1:-1])
-    )
+    field_list = tuple(record[1:])
     item = model(*field_list)
     item.id = record[0]
     return item

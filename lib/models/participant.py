@@ -32,6 +32,7 @@ class Participant:
         self.first_name = first_name
         self.last_name = last_name
         self.birth_date = birth_date
+        self.team_id = None
         self.id = None
 
     def __repr__(self):
@@ -93,7 +94,7 @@ class Participant:
         return Participant(first_name, last_name, birth_date)
 
     @classmethod
-    def fetch_all(cls, team_id: int = None):
+    def fetch(cls, team_id: int = None):
         """
         Fetches all records from the 'participants' table. Returns a list
         of all Participant instances or empty list if none found. 'team_id'
@@ -115,10 +116,11 @@ class Participant:
             first_name=self.first_name,
             last_name=self.last_name,
             birth_date=self.birth_date,
+            team_id=self.team_id,
         )
         self.id = participant_id
 
-    def update(self, team_id: int = None):
+    def update(self):
         """
         Overwrites a participant's database record with info changes. Allows
         for the team_id to be passed in and sent to the database, enabling a
@@ -129,16 +131,15 @@ class Participant:
             "first_name": self.first_name,
             "last_name": self.last_name,
             "birth_date": self.birth_date,
+            "team_id": self.team_id
         }
-        if team_id:
-            updates["team_id"] = team_id
-
         update_row(
             TABLE_CONFIG,
             self.id,
             **updates,
         )
         return self
+
 
     def delete(self):
         """
@@ -148,6 +149,7 @@ class Participant:
         delete_row(TABLE_CONFIG, self.id)
         self.id = None
 
+
     def team(self):
         """
         Returns the team associated with the participant.
@@ -155,6 +157,6 @@ class Participant:
         from models.team import Team
 
         for t in Team.all:
-            if self in t.participants:
+            if t.id == self.team_id:
                 return t
         return None

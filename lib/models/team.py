@@ -22,8 +22,6 @@ from util.db_helpers import (
 class Team:
     CONFIG = MODEL_CONFIG
 
-    all = []
-
     def __init__(
         self,
         name: str,
@@ -31,11 +29,10 @@ class Team:
     ):
         self.name = name
         self.is_free_agents = is_free_agents
-        self.participants = []
         self.id = None
 
     def __repr__(self):
-        return self.name
+        return f"<<TEAM: {self.name}>>"
 
     @property
     def name(self):
@@ -74,12 +71,12 @@ class Team:
         return team
 
     @classmethod
-    def fetch_all(cls):
+    def fetch(cls, tid: int = None):
         """
         Fetches all records from the 'teams' table. Returns a list
         of all Team instances or empty list if none found.
         """
-        db_data = select_all_rows(TABLE_CONFIG)
+        db_data = select_all_rows(TABLE_CONFIG, tid)
         result = [parse_db_row(cls, row) for row in db_data]
         return result
 
@@ -94,7 +91,6 @@ class Team:
             is_free_agents=self.is_free_agents,
         )
         self.id = team_id
-        Team.all.append(self)
         return self
 
     def update(self):
@@ -111,38 +107,15 @@ class Team:
 
     def delete(self):
         """
-        Deletes team's database record, removes the team from Team.all,
-        and then nullifies self.id.
+        Deletes team's database record and then nullifies self.id.
         """
         delete_row(TABLE_CONFIG, self.id)
-        Team.all.remove(self)
         self.id = None
 
     def fetch_participants(self):
         """
-        Uses the Participant.fetch_all() method to load all participants tagged
-        with self.id. No team capacity check so that full team loads even if default
-        capacity changes. Managers shall remove partitipants from team manually to
-        remain in compliance.
+        Uses the Participant.fetch() method to load all participants tagged
+        with self.id.
         """
         from models.participant import Participant
-
-        Participant.fetch_all(self.id)
-
-    def append_participant(self, participant, do_persist: bool = False):
-        """
-        Adds a participant to the team and persists the assignment if do_persist has
-        a value of True. The Participant.update() method allows for the team_id to be
-        passed to it, enabling a foreign-key relationship between members and teams in
-        the database, while relating through object-orientation in the code.
-        """
-        self.participants.append(participant)
-        if do_persist:
-            participant.update(self.id)
-
-    def remove_participant(self, participant):
-        """
-        Removes a participant from the team. Does NOT persist the removal as this will be
-        performed when adding to a new team, including the free agent team.
-        """
-        self.participants.remove(participant)
+        Participant.fetch(self.id)
