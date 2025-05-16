@@ -1,14 +1,14 @@
 {
     "back": {
-        "format": "fresh",
+        "format": "name",
         "menu_text": "Back to last step"
     },
     "reset": {
-        "format": "nope",
+        "format": "reset",
         "menu_text": "Reset to Main Manu"
     },
     "quit": {
-        "format": "angry",
+        "format": "quit",
         "menu_text": "Quit the application"
     }
 }

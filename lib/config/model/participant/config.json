@@ -5,7 +5,7 @@
         "user_editable": false,
         "validation": {}
     },
-    "first_name": {
+    "f_name": {
         "req_for_init": true,
         "display_text": "first name",
         "user_editable": true,
@@ -16,7 +16,7 @@
             "regex": "^\\b[a-zA-Z '.\\-]+\\b$"
         }
     },
-    "last_name": {
+    "l_name": {
         "req_for_init": true,
         "display_text": "last name",
         "user_editable": true,

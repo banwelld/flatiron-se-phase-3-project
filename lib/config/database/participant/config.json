@@ -2,8 +2,8 @@
     "table_name": "participants",
     "columns": {
         "id": "INTEGER PRIMARY KEY",
-        "first_name": "TEXT",
-        "last_name": "TEXT",
+        "f_name": "TEXT",
+        "l_name": "TEXT",
         "birth_date": "TEXT",
         "team_id": "INTEGER"
     },

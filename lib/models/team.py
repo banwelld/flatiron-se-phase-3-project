@@ -13,7 +13,7 @@ from util.db_helpers import (
     drop_table,
     insert_row,
     update_row,
-    delete_row,
+    del_row,
     select_all_rows,
     parse_db_row,
 )
@@ -49,7 +49,7 @@ class Team:
         create_table(TABLE_CONFIG)
 
     @classmethod
-    def delete_table(cls):
+    def del_table(cls):
         """
         Deletes the table associated to the current class.
         """
@@ -105,7 +105,7 @@ class Team:
         """
         Deletes team's database record and then nullifies self.id.
         """
-        delete_row(TABLE_CONFIG, self.id)
+        del_row(TABLE_CONFIG, self.id)
         self.id = None
 
     def fetch_participants(self) -> list:

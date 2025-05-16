@@ -9,8 +9,8 @@ from models import Participant, Team
 
 
 def initialize_db():
-    Participant.delete_table()
-    Team.delete_table()
+    Participant.del_table()
+    Team.del_table()
     Participant.build_table()
     Team.build_table()
 

@@ -44,16 +44,14 @@ def select_all_rows(table_def: dict, team_id: int = None):
         where_clause = ""
         criteria = ""
 
-    sort_columns = (
-        "name" if table_def["table_name"] == "teams" else "last_name, first_name"
-    )
+    sort_columns = "name" if table_def["table_name"] == "teams" else "l_name, f_name"
     sort_clause = f"ORDER BY {sort_columns}"
     query = f"SELECT * FROM {table_def['table_name']} {where_clause} {sort_clause}"
 
     return CURSOR.execute(query, criteria).fetchall()
 
 
-def delete_row(table_def: dict, id: int):
+def del_row(table_def: dict, id: int):
     """
     Assembles and executes an SQL query that deletes the table specified
     in the provided table definition and commits the change to the
@@ -96,9 +94,7 @@ def update_row(table_def: dict, id: int, **updates):
     if id is not None:
         assignment_values.append(id)
 
-    query = (
-        f"UPDATE {table_def['table_name']} SET {assignment_string} {where_clause}"
-    )
+    query = f"UPDATE {table_def['table_name']} SET {assignment_string} {where_clause}"
 
     CURSOR.execute(query, tuple(assignment_values))
     CONN.commit()

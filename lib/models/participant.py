@@ -13,7 +13,7 @@ from util.db_helpers import (
     drop_table,
     insert_row,
     update_row,
-    delete_row,
+    del_row,
     select_all_rows,
     parse_db_row,
 )
@@ -24,38 +24,38 @@ class Participant:
 
     def __init__(
         self,
-        first_name: str,
-        last_name: str,
+        f_name: str,
+        l_name: str,
         birth_date: str,
         team_id: int = None,
         id: int = None,
     ):
-        self.first_name = first_name
-        self.last_name = last_name
+        self.f_name = f_name
+        self.l_name = l_name
         self.birth_date = birth_date
         self.team_id = team_id
         self.id = id
 
     def __repr__(self):
-        return f"<<PARTICIPANT: {self.last_name.upper()}, {self.first_name} (id {self.id}, team {self.team_id})>>"
+        return f"<<PARTICIPANT: {self.l_name.upper()}, {self.f_name} (id {self.id}, team {self.team_id})>>"
 
     @property
-    def first_name(self):
-        return self._first_name
+    def f_name(self):
+        return self._f_name
 
-    @first_name.setter
-    @validate_name("participant", "first_name")
-    def first_name(self, first_name):
-        self._first_name = first_name
+    @f_name.setter
+    @validate_name("participant", "f_name")
+    def f_name(self, f_name):
+        self._f_name = f_name
 
     @property
-    def last_name(self):
-        return self._last_name
+    def l_name(self):
+        return self._l_name
 
-    @last_name.setter
-    @validate_name("participant", "last_name")
-    def last_name(self, last_name):
-        self._last_name = last_name
+    @l_name.setter
+    @validate_name("participant", "l_name")
+    def l_name(self, l_name):
+        self._l_name = l_name
 
     @property
     def birth_date(self):
@@ -76,7 +76,7 @@ class Participant:
         create_table(TABLE_CONFIG)
 
     @classmethod
-    def delete_table(cls):
+    def del_table(cls):
         """
         Deletes the table associated to the current class in its
         _TABLE_DEF attribute.
@@ -84,15 +84,15 @@ class Participant:
         drop_table(TABLE_CONFIG)
 
     @classmethod
-    def create(cls, first_name: str, last_name: str, birth_date: str):
+    def create(cls, f_name: str, l_name: str, birth_date: str):
         """
-        Instantiates a new participant with first_name, last_name, and
+        Instantiates a new participant with f_name, l_name, and
         birth_date values and runs the save() method on the new instance
         and returns it. As a precaution, builds the participants table if
         none exists.
         """
         cls.build_table()
-        return Participant(first_name, last_name, birth_date)
+        return Participant(f_name, l_name, birth_date)
 
     @classmethod
     def fetch(cls, team_id: int = None):
@@ -114,8 +114,8 @@ class Participant:
         """
         participant_id = insert_row(
             TABLE_CONFIG,
-            first_name=self.first_name,
-            last_name=self.last_name,
+            f_name=self.f_name,
+            l_name=self.l_name,
             birth_date=self.birth_date,
             team_id=self.team_id,
         )
@@ -129,8 +129,8 @@ class Participant:
         while relating through object-orientation in the code.
         """
         updates = {
-            "first_name": self.first_name,
-            "last_name": self.last_name,
+            "f_name": self.f_name,
+            "l_name": self.l_name,
             "birth_date": self.birth_date,
             "team_id": self.team_id,
         }
@@ -146,7 +146,7 @@ class Participant:
         Deletes participant's database record, removes the participant's record
         in its team's participants list, and then nullifies self.id.
         """
-        delete_row(TABLE_CONFIG, self.id)
+        del_row(TABLE_CONFIG, self.id)
         self.id = None
 
     def team(self):

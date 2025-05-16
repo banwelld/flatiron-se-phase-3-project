@@ -79,7 +79,7 @@ pipenv install
 cd lib/data/setup
 ```
 
-5. Run the database initializer to ensure that you're starting fresh
+5. Run the database initializer to ensure that you're starting name
 
 ```bash
 python db_initializer.py
