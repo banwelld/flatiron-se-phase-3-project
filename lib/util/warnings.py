@@ -1,3 +1,8 @@
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+
 from util.helpers import render_warning
 from strings.display_messages import (
     INVALID_SELECTION,
@@ -5,7 +10,9 @@ from strings.display_messages import (
     INVALID_NAME_LEN,
     INVALID_DATE_FORMAT,
     INVALID_DATE,
+    INVALID_OPTION,
     TEAM_FULL,
+    TEAM_EMPTY,
 )
 
 
@@ -30,4 +37,12 @@ def warn_date_invalid():
 
 
 def warn_team_full():
-    render_warning(TEAM_FULL, enter_to_continue=True)
+    render_warning(TEAM_FULL)
+
+
+def warn_team_empty():
+    render_warning(TEAM_EMPTY)
+
+
+def warn_invalid_option():
+    render_warning(INVALID_OPTION, enter_to_continue=True)

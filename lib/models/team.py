@@ -3,7 +3,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from config.get_config import (
+from config import (
     TEAM_MODEL_CONFIG as MODEL_CONFIG,
     TEAM_TABLE_CONFIG as TABLE_CONFIG,
 )
@@ -22,11 +22,7 @@ from util.db_helpers import (
 class Team:
     CONFIG = MODEL_CONFIG
 
-    def __init__(
-        self,
-        name: str,
-        is_free_agents: bool = False,
-    ):
+    def __init__(self, name: str, is_free_agents: bool = False):
         self.name = name
         self.is_free_agents = is_free_agents
         self.id = None
@@ -112,10 +108,11 @@ class Team:
         delete_row(TABLE_CONFIG, self.id)
         self.id = None
 
-    def fetch_participants(self):
+    def fetch_participants(self) -> list:
         """
         Uses the Participant.fetch() method to load all participants tagged
         with self.id.
         """
         from models.participant import Participant
-        Participant.fetch(self.id)
+
+        return Participant.fetch(self.id)

@@ -15,5 +15,6 @@
             "max_length": 30,
             "regex": "^\\b[a-zA-Z0-9 ,'.\\-]+\\b$"
         }
-    }
+    },
+    "max_team_participants": 6
 }

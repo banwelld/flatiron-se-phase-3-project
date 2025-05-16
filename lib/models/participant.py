@@ -3,7 +3,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from config.get_config import (
+from config import (
     PARTICIPANT_MODEL_CONFIG as MODEL_CONFIG,
     PARTICIPANT_TABLE_CONFIG as TABLE_CONFIG,
 )
@@ -27,17 +27,17 @@ class Participant:
         first_name: str,
         last_name: str,
         birth_date: str,
-        id: int = None
+        team_id: int = None,
+        id: int = None,
     ):
-
         self.first_name = first_name
         self.last_name = last_name
         self.birth_date = birth_date
-        self.team_id = None
+        self.team_id = team_id
         self.id = id
 
     def __repr__(self):
-        return f"<<PARTICIPANT: {self.last_name.upper()}, {self.first_name} (id {self.id})>>"
+        return f"<<PARTICIPANT: {self.last_name.upper()}, {self.first_name} (id {self.id}, team {self.team_id})>>"
 
     @property
     def first_name(self):
@@ -132,7 +132,7 @@ class Participant:
             "first_name": self.first_name,
             "last_name": self.last_name,
             "birth_date": self.birth_date,
-            "team_id": self.team_id
+            "team_id": self.team_id,
         }
         update_row(
             TABLE_CONFIG,
@@ -140,7 +140,6 @@ class Participant:
             **updates,
         )
         return self
-
 
     def delete(self):
         """
@@ -150,11 +149,11 @@ class Participant:
         delete_row(TABLE_CONFIG, self.id)
         self.id = None
 
-
     def team(self):
         """
         Returns the team associated with the participant.
         """
         from models.team import Team
+
         my_team = Team.fetch(self.team_id)
         return next(my_team, None)

@@ -1,6 +1,6 @@
 {
     "back": {
-        "format": "ask",
+        "format": "fresh",
         "menu_text": "Back to last step"
     },
     "reset": {

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-from models.participant import Participant
-from models.team import Team
+from models import Participant, Team
 
 
 def initialize_db():

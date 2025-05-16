@@ -16,9 +16,15 @@ INVALID_DATE_FORMAT = (
     "Invalid date format. Please use YYYY-MM-DD format. (Must have leading zeros)"
 )
 
+INVALID_OPTION = (
+    "The option that you selected has no associated action. Returning to main menu."
+)
+
 INVALID_DATE = "Invalid date: Date does not exist. Check day/month combination."
 
-TEAM_FULL = "Team is full. Cannot add more participants."
+TEAM_FULL = "Team is full. Cannot add participants."
+
+TEAM_EMPTY = "Team is empty. Cannot update, remove, or delete participants."
 
 EXIT_MSG = "Exiting program. Goodbye!"
 

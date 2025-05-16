@@ -12,6 +12,6 @@
     "participant": {
         "option_type": "model",
         "title_suffix": "Participant Selection",
-        "instruction": "Select a Participant: "
+        "instruction": "Select a person: "
     }
 }

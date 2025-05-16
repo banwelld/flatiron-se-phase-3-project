@@ -1,10 +1,6 @@
 from __init__ import CURSOR, CONN
 
 
-def find_entity_in_list(entities: list, entity_id: int):
-    return next((e for e in entities if e.id == entity_id), None)
-
-
 def create_table(table_def: dict):
     """
     Assembles and executes an SQL query that creates a table from data
@@ -52,7 +48,7 @@ def select_all_rows(table_def: dict, team_id: int = None):
         "name" if table_def["table_name"] == "teams" else "last_name, first_name"
     )
     sort_clause = f"ORDER BY {sort_columns}"
-    query = f"SELECT * FROM {table_def['table_name']} " f"{where_clause} {sort_clause}"
+    query = f"SELECT * FROM {table_def['table_name']} {where_clause} {sort_clause}"
 
     return CURSOR.execute(query, criteria).fetchall()
 
@@ -101,7 +97,7 @@ def update_row(table_def: dict, id: int, **updates):
         assignment_values.append(id)
 
     query = (
-        f"UPDATE {table_def['table_name']} " f"SET {assignment_string} {where_clause}"
+        f"UPDATE {table_def['table_name']} SET {assignment_string} {where_clause}"
     )
 
     CURSOR.execute(query, tuple(assignment_values))

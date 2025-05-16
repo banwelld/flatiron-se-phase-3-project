@@ -3,72 +3,89 @@
         "title_suffix": "New Team",
         "menu_text": "Create a New Team",
         "instruction": "Please enter a value for each of the requested details.",
-        "success_msg": "Team created",
+        "success_msg": "Team saved",
         "resolve_participant": false,
-        "load_free_agents": false
+        "load_free_agents": false,
+        "verify_team_full": false,
+        "verify_team_empty": false
     },
     "create_participant": {
         "title_suffix": "New Participant",
         "menu_text": "Add a New Participant",
         "instruction": "Please enter a value for each of the requested details.",
-        "success_msg": "Participant created",
+        "success_msg": "Participant saved",
         "resolve_participant": false,
-        "load_free_agents": false
+        "load_free_agents": false,
+        "verify_team_full": true,
+        "verify_team_empty": false
     },
     "recruit_free_agent": {
         "title_suffix": "Recruit Free Agent",
         "menu_text": "Recruit Free Agent to Team",
         "instruction": null,
-        "success_msg": "Participant added to team",
+        "success_msg": "Added to team",
         "resolve_participant": true,
-        "load_free_agents": true
+        "load_free_agents": true,
+        "verify_team_full": true,
+        "verify_team_empty": false
     },
     "remove_participant": {
         "title_suffix": "Remove Participant",
         "menu_text": "Remove Participant from Team",
         "instruction": null,
-        "success_msg": "Participant removed from team",
+        "success_msg": "Removed from team",
         "resolve_participant": true,
-        "load_free_agents": true
+        "load_free_agents": true,
+        "verify_team_full": false,
+        "verify_team_empty": true
     },
     "delete_participant": {
         "title_suffix": "Delete Participant",
         "menu_text": "Delete Participant Record",
         "instruction": null,
-        "success_msg": "Participant deleted",
+        "success_msg": "Deleted",
         "resolve_participant": true,
-        "load_free_agents": false
+        "load_free_agents": false,
+        "verify_team_full": false,
+        "verify_team_empty": true
     },
     "delete_team": {
         "title_suffix": "Delete Team",
         "menu_text": "Delete Team Record",
         "instruction": null,
-        "success_msg": "Team deleted and participants (if any) added to free agents",
+        "success_msg": "Deleted (participants, if any, added to free agents)",
         "resolve_participant": false,
-        "load_free_agents": true
+        "load_free_agents": true,
+        "verify_team_full": false
     },
     "update_participant_first_name": {
         "title_suffix": "Update First Name",
         "menu_text": "Update Participant First Name",
         "instruction": "Please enter the participant's new first name.",
-        "success_msg": "Participant first name updated",
+        "success_msg": "Name updated",
         "resolve_participant": true,
-        "load_free_agents": false
+        "load_free_agents": false,
+        "verify_team_full": false,
+        "verify_team_empty": true
     },
     "update_participant_last_name": {
         "title_suffix": "Update Last Name",
         "menu_text": "Update Participant Last Name",
         "instruction": "Please enter the participant's new last name.",
-        "success_msg": "Participant last name updated",
+        "success_msg": "Name updated",
         "resolve_participant": true,
-        "load_free_agents": false
+        "load_free_agents": false,
+        "verify_team_full": false,
+        "verify_team_empty": true
     },
     "update_team_name": {
         "title_suffix": "Update Team Name",
         "menu_text": "Update Team Name",
         "instruction": "Please enter the team's new name.",
-        "success_msg": "Team name updated",
+        "success_msg": "Name updated",
         "resolve_participant": false,
-        "load_free_agents": false
+        "load_free_agents": false,
+        "verify_team_full": false,
+        "verify_team_empty": false
     }
 }

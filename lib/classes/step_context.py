@@ -1,19 +1,9 @@
 class StepContext:
-    def __init__(self, first_step_func):
+    def __init__(self, first_step_func, init_state):
         self.first_step_func = first_step_func
-        self.init_state = {
-            "sel_team": None,
-            "sel_operation": None,
-            "sel_participant": None,
-            "comp_teams": None,
-            "free_agent_team": None,
-            "sel_team_participants": None,
-            "free_agents": None,
-            "save_prompt": None,
-            "exec_func": None,
-        }
-        self.state = self.init_state.copy()
-        self.stack = [self.first_step_func]
+        self.init_state = init_state
+        self.state = init_state.copy()
+        self.stack = [(self.first_step_func, init_state.copy())]
 
     def push(self, step_func):
         # Push the function and a copy of the current state
@@ -26,8 +16,8 @@ class StepContext:
         else:
             return None
 
-    def can_go_back(self):
-        return len(self.stack) > 0
+    def can_go_back(self, step_count: int = 1):
+        return len(self.stack) > step_count - 1
 
     def restart(self):
         self.state = self.init_state.copy()
