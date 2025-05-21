@@ -1,6 +1,6 @@
 # Trivia Team Tracker
 
-Trivia Team Tracker is an application that enables a trivia league to keep track of their current teams and the members of each team.
+Trivia Team Tracker is an application that enables a trivia league to keep track of their current teams and the members of each team plus free agents who are currently without a team.
 
 ## Table of Contents
 
@@ -19,7 +19,7 @@ Trivia Team Tracker is an application that enables a trivia league to keep track
 
 The user-facing front end comprises a command-line interface that accepts input from the user, enabling them to perform operations such as creating a team, creating a new participant, adding and removing participants from teams, deleting teams or participants, and updating participant or team names.
 
-Control flow is managed via a loop and a stack upon which every operation appends a tuple containing both a function representing the next operation to be performed and the state data with which it will be performed. The loop continuously invokes the function in the top-most tuple on the stack.
+Control flow is managed via a loop and a stack, upon which every operation appends a tuple containing both a function representing the next operation to be performed and the state data with which it will be performed. The loop continuously invokes the function in the top-most tuple on the stack.
 
 At any point in the flow, a user can use the back option to return to the previous step, which is facillitated by removing the top-most tuple from the stack and invoking the function in the previous tuple and replacing the current state data with the historical state data from the tuple.
 
@@ -79,13 +79,13 @@ pipenv install
 cd lib/data/setup
 ```
 
-5. Run the database initializer to ensure that you're starting name
+5. Run the database initializer to ensure that you're starting with a fresh database, free from test data.
 
 ```bash
 python db_initializer.py
 ```
 
-6. (OPTIONAL) Run the database seeder, which will populate your database with artificial teams and players 
+6. (OPTIONAL) Run the database seeder to populate the database tables with sample participants and teams that you can practice on to learn how to use all of the simple team and participant operations.
 
 ```bash
 python db_seeder.py
@@ -113,7 +113,7 @@ You’ll be presented with a team selection menu, which is the entrypoint to the
 
 ## Contributing
 
-If you'd like to contribute to MedTracker:
+If you'd like to contribute to Trivia Team Tracker:
 
 - Fork the repository
 - Create a new branch (git checkout -b feature/YourFeature)
